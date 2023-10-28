@@ -103,11 +103,7 @@ public class SignController {
                                    @RequestParam(value = "apikey") String apikey,
                                    @RequestParam(value = "signed") Optional<Boolean> signed,
                                    @RequestParam(value = "json") Optional<Boolean> json,
-                                   @RequestParam(value = "signName") Optional<String> signName,
-                                   @RequestParam(value = "signReason") Optional<String> signReason,
-                                   @RequestParam(value = "signLocation") Optional<String> signLocation,
-                                   @RequestParam(value = "visibleLine1") Optional<String> visibleLine1,
-                                   @RequestParam(value = "visibleLine2") Optional<String> visibleLine2,
+                                   @RequestParam(value = "password") Optional<String> password,
 
                                    // @RequestParam(value = "qrcode") Optional<String> qrcode,
                                    HttpServletResponse response ) {
@@ -141,7 +137,7 @@ public class SignController {
                 List<PDFSignatureInfo> info = PDFSignatureInfoParser.getPDFSignatureInfo(bytes);
                 if (info.isEmpty()) {
                     model.addAttribute("error", true);
-                    model.addAttribute("message", "Cannot find siganture");
+                    model.addAttribute("message", "Cannot find signature");
                 } else {
                     JsonObject jo = handleUpload(year, authority, folder, protocol, uuid, bytes);
                     model.addAttribute("path", jo.get("path"));
@@ -154,7 +150,7 @@ public class SignController {
 
                 e.printStackTrace();
                 model.addAttribute("error", true);
-                model.addAttribute("message", "Cannot validate siganture: " + e.getMessage());
+                model.addAttribute("message", "Cannot validate signature: " + e.getMessage());
                 return respondHtmlOrJson(json, model, response);
             }
             return respondHtmlOrJson(json, model, response);
@@ -163,7 +159,12 @@ public class SignController {
             // Handle non-signed file
             try {
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                Calendar signDate = signer.sign(file.getInputStream(), bos);
+                Calendar signDate;
+                if(password.isPresent()){
+                    signDate=signer.sign(file.getInputStream(), bos, password.orElse(""));
+                } else {
+                    signDate=signer.sign(file.getInputStream(), bos);
+                }
 
                 // Get the signed PDF bytes
                 byte[] signedPdfBytes = bos.toByteArray();

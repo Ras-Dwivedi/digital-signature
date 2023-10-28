@@ -119,28 +119,39 @@ public class Signer {
         return signing.signPDF(is, os, tsaUrl, "Signature1");
 
     }
-    public boolean isDscInserted(String password) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException {
+    public boolean isDscInserted(String password){
+        logger.debug("password is "+ password);
         if (password.isEmpty()){
             return false;
         }
         String configPath = "config.cfg";
         Provider pkcs11Provider = Security.getProvider("SunPKCS11");
         pkcs11Provider = pkcs11Provider.configure(configPath);
-        KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
-        pkcs11KeyStore.load(null, password.toCharArray());
-        java.util.Enumeration<String> aliases = pkcs11KeyStore.aliases();
-        int noAliases = 0;
-        List<String> aliasList = new ArrayList<>();
-        while (aliases.hasMoreElements()) {
-            String alias = aliases.nextElement();
-            System.out.println("Alias: " + alias);
-            noAliases += 1;
-            aliasList.add(alias);
+        try {
+            KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
+            pkcs11KeyStore.load(null, password.toCharArray());
+            java.util.Enumeration<String> aliases = pkcs11KeyStore.aliases();
+            logger.debug("dected dsc fetching aliases");
+            int noAliases = 0;
+            List<String> aliasList = new ArrayList<>();
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                System.out.println("Alias: " + alias);
+                noAliases += 1;
+                aliasList.add(alias);
+            }
+            if (noAliases > 0) {
+                return true;
+            }
+
+            return false;
+        } catch (CertificateException e) {
+            return false;
+        } catch (IOException | KeyStoreException e) {
+            return false;
+        } catch (NoSuchAlgorithmException e) {
+           return false;
         }
-        if (noAliases>0){
-            return true;
-        }
-        return false;
     }
 
 
