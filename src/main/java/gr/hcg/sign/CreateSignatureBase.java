@@ -18,17 +18,14 @@ package gr.hcg.sign;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.UnrecoverableKeyException;
+import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
 
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
@@ -129,6 +126,7 @@ public abstract class CreateSignatureBase implements SignatureInterface
      *
      * @throws IOException
      */
+//    @Override
     @Override
     public byte[] sign(InputStream content) throws IOException
     {
@@ -173,4 +171,5 @@ public abstract class CreateSignatureBase implements SignatureInterface
     {
         return externalSigning;
     }
+
 }

@@ -163,7 +163,7 @@ public class SignController {
             // Handle non-signed file
             try {
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                Calendar signDate = signer.sign(file.getInputStream(), bos, signName.orElse(null), signLocation.orElse(null), signReason.orElse(null), visibleLine1.orElse(null), visibleLine2.orElse(null), uuid);
+                Calendar signDate = signer.sign(file.getInputStream(), bos);
 
                 // Get the signed PDF bytes
                 byte[] signedPdfBytes = bos.toByteArray();

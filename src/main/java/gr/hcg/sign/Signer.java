@@ -6,12 +6,11 @@ import org.springframework.stereotype.Component;
 
 import java.awt.geom.Rectangle2D;
 import java.io.*;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
+import java.security.*;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 @Component
 public class Signer {
@@ -65,9 +64,7 @@ public class Signer {
        
     }
 
-
-    public Calendar sign(InputStream is, OutputStream os, String signName, String signLocation, String signReason, String visibleLine1, String visibleLine2, String uuid) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
-
+    public Calendar sign(InputStream is, OutputStream os) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
         InputStream ksInputStream = new FileInputStream(keystoreName);
 
         KeyStore keystore = KeyStore.getInstance("PKCS12");
@@ -80,7 +77,71 @@ public class Signer {
         signing.setImageBytes(readBytes(imageResource));
 
         return signing.signPDF(is, os, tsaUrl, "Signature1");
+        }
+        /**
+         * Calls Signing.signPdf to sign the pdf and returns the Calendar class
+         * @param is
+         * @param os
+         * @param signName
+         * @param signLocation
+         * @param signReason
+         * @param visibleLine1
+         * @param visibleLine2
+         * @param uuid
+         * @return
+         * @throws KeyStoreException
+         * @throws CertificateException
+         * @throws IOException
+         * @throws NoSuchAlgorithmException
+         * @throws UnrecoverableKeyException
+         */
+    public Calendar sign(InputStream is, OutputStream os, String password) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
+        // This function should decide whether the dsc has been inserted or not and in case no, then it should use pfx for signing
+        if (password.isEmpty()){
+            // In case password is not specified, it has to be pfx signature
+            return sign(is, os);
+        }
+        if (! isDscInserted(password)){
+            return sign(is, os);
+        }
+        // Case of dsc based signature, change the code here
+        InputStream ksInputStream = new FileInputStream(keystoreName);
+
+        KeyStore keystore = KeyStore.getInstance("PKCS12");
+        char[] pin = keystorePin.toCharArray();
+        keystore.load(ksInputStream, pin);
+
+        CreateVisibleSignatureMemDsc signing = new CreateVisibleSignatureMemDsc(keystore, pin.clone());
+
+        InputStream imageResource = new FileInputStream(imageName);
+        signing.setImageBytes(readBytes(imageResource));
+
+        return signing.signPDF(is, os, tsaUrl, "Signature1");
 
     }
+    public boolean isDscInserted(String password) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException {
+        if (password.isEmpty()){
+            return false;
+        }
+        String configPath = "config.cfg";
+        Provider pkcs11Provider = Security.getProvider("SunPKCS11");
+        pkcs11Provider = pkcs11Provider.configure(configPath);
+        KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
+        pkcs11KeyStore.load(null, password.toCharArray());
+        java.util.Enumeration<String> aliases = pkcs11KeyStore.aliases();
+        int noAliases = 0;
+        List<String> aliasList = new ArrayList<>();
+        while (aliases.hasMoreElements()) {
+            String alias = aliases.nextElement();
+            System.out.println("Alias: " + alias);
+            noAliases += 1;
+            aliasList.add(alias);
+        }
+        if (noAliases>0){
+            return true;
+        }
+        return false;
+    }
+
 
 }

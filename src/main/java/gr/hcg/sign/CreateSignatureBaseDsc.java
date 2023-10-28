@@ -1,0 +1,343 @@
+/*
+ * Copyright 2015 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package gr.hcg.sign;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.*;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.List;
+
+import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
+import org.bouncycastle.cert.jcajce.JcaCertStore;
+import org.bouncycastle.cms.CMSException;
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.CMSSignedDataGenerator;
+import org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
+
+/**
+ * This class signs using the dsc dongle
+ */
+public abstract class CreateSignatureBaseDsc implements SignatureInterface
+{
+    private PrivateKey privateKey;
+    private Certificate[] certificateChain;
+    private String tsaUrl;
+    private boolean externalSigning;
+    private char[] pin;
+
+    /**
+     * Initialize the signature creator with a keystore (pkcs12) and pin that should be used for the
+     * signature.
+     *
+     * @param keystore is a pkcs12 keystore.
+     * @param pin is the pin for the keystore / private key
+     * @throws KeyStoreException if the keystore has not been initialized (loaded)
+     * @throws NoSuchAlgorithmException if the algorithm for recovering the key cannot be found
+     * @throws UnrecoverableKeyException if the given password is wrong
+     * @throws CertificateException if the certificate is not valid as signing time
+     * @throws IOException if no certificate could be found
+     */
+    public CreateSignatureBaseDsc(KeyStore keystore, char[] pin)
+            throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, IOException, CertificateException
+    {
+        // This function is currently grabbing the certificate form the pfx file. Need to change that
+
+        // grabs the first alias from the keystore and get the private key. An
+        // alternative method or constructor could be used for setting a specific
+        // alias that should be used.
+        Enumeration<String> aliases = keystore.aliases();
+        String alias;
+        Certificate cert = null;
+        while (cert == null && aliases.hasMoreElements())
+        {
+            alias = aliases.nextElement();
+            setPrivateKey((PrivateKey) keystore.getKey(alias, pin));
+            Certificate[] certChain = keystore.getCertificateChain(alias);
+            if (certChain != null)
+            {
+                setCertificateChain(certChain);
+                cert = certChain[0];
+                if (cert instanceof X509Certificate)
+                {
+                    // avoid expired certificate
+                    ((X509Certificate) cert).checkValidity();
+
+                    SigUtils.checkCertificateUsage((X509Certificate) cert);
+                }
+            }
+        }
+
+        if (cert == null)
+        {
+            throw new IOException("Could not find certificate");
+        }
+        this.pin = pin;
+    }
+    public CreateSignatureBaseDsc(KeyStore keystore, String password)
+            throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, IOException, CertificateException
+    {
+        char[] pin = password.toCharArray();
+        Enumeration<String> aliases = keystore.aliases();
+        String alias;
+        Certificate cert = null;
+        while (cert == null && aliases.hasMoreElements())
+        {
+            alias = aliases.nextElement();
+            setPrivateKey((PrivateKey) keystore.getKey(alias, pin));
+            Certificate[] certChain = keystore.getCertificateChain(alias);
+            if (certChain != null)
+            {
+                setCertificateChain(certChain);
+                cert = certChain[0];
+                if (cert instanceof X509Certificate)
+                {
+                    // avoid expired certificate
+                    ((X509Certificate) cert).checkValidity();
+
+                    SigUtils.checkCertificateUsage((X509Certificate) cert);
+                }
+            }
+        }
+
+        if (cert == null)
+        {
+            throw new IOException("Could not find certificate");
+        }
+        this.pin = pin;
+    }
+    public final void setPrivateKey(PrivateKey privateKey)
+    {
+        this.privateKey = privateKey;
+    }
+
+    public final void setCertificateChain(final Certificate[] certificateChain)
+    {
+        this.certificateChain = certificateChain;
+    }
+
+    public Certificate[] getCertificateChain()
+    {
+        return certificateChain;
+    }
+
+    public void setTsaUrl(String tsaUrl)
+    {
+        this.tsaUrl = tsaUrl;
+    }
+
+    /**
+     * SignatureInterface sample implementation.
+     *<p>
+     * This method will be called from inside of the pdfbox and create the PKCS #7 signature.
+     * The given InputStream contains the bytes that are given by the byte range.
+     *<p>
+     * This method is for internal use only.
+     *<p>
+     * Use your favorite cryptographic library to implement PKCS #7 signature creation.
+     * If you want to create the hash and the signature separately (e.g. to transfer only the hash
+     * to an external application), read <a href="https://stackoverflow.com/questions/41767351">this
+     * answer</a> or <a href="https://stackoverflow.com/questions/56867465">this answer</a>.
+     *
+     * @throws IOException
+     */
+//    @Override
+//    public byte[] sign(InputStream content, String password, boolean isDscInserted) throws IOException {
+//        if (isDscInserted){
+//            return signDsc(content, password);
+//        }
+//        else {
+//            return signPfx(content);
+//        }
+//
+//    }
+//    //    @Override
+//    public byte[] sign(InputStream content, boolean isDscInserted) throws IOException {
+//        if (isDscInserted){
+//            throw new IOException("Password is required for the digital signature.");
+//        }
+//        else {
+//            return signPfx(content);
+//        }
+//
+//    }
+
+//    @Override
+//    public byte[] sign(InputStream content) throws IOException{
+//        return signPfx(content);
+//    }
+//    public byte[] signPfx(InputStream content) throws IOException
+//    {
+//        // cannot be done private (interface)
+//        try
+//        {
+//            CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
+//            X509Certificate cert = (X509Certificate) certificateChain[0];
+//            ContentSigner sha1Signer = new JcaContentSignerBuilder("SHA256WithRSA").build(privateKey);
+//            gen.addSignerInfoGenerator(new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build()).build(sha1Signer, cert));
+//            gen.addCertificates(new JcaCertStore(Arrays.asList(certificateChain)));
+//            CMSProcessableInputStream msg = new CMSProcessableInputStream(content);
+//            CMSSignedData signedData = gen.generate(msg, false);
+//            if (tsaUrl != null && tsaUrl.length() > 0)
+//            {
+//                ValidationTimeStamp validation = new ValidationTimeStamp(tsaUrl);
+//                signedData = validation.addSignedTimeStamp(signedData);
+//
+//            }
+//            return signedData.getEncoded();
+//        }
+//        catch (GeneralSecurityException | CMSException | OperatorCreationException e)
+//        {
+//            throw new IOException(e);
+//        }
+//    }
+    @Override
+    public byte[] sign(InputStream content) throws IOException
+    {
+        // cannot be done private (interface)
+        try
+        {
+            CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
+            X509Certificate cert = (X509Certificate) certificateChain[0];
+            ContentSigner sha1Signer = new JcaContentSignerBuilder("SHA256WithRSA").build(privateKey);
+            gen.addSignerInfoGenerator(new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build()).build(sha1Signer, cert));
+            gen.addCertificates(new JcaCertStore(Arrays.asList(certificateChain)));
+            CMSProcessableInputStream msg = new CMSProcessableInputStream(content);
+//            CMSSignedData signedData = gen.generate(msg, false);
+            CMSSignedData signedData = getSignature(content, this.pin);
+            if (tsaUrl != null && tsaUrl.length() > 0)
+            {
+                ValidationTimeStamp validation = new ValidationTimeStamp(tsaUrl);
+                signedData = validation.addSignedTimeStamp(signedData);
+
+            }
+            return signedData.getEncoded();
+        }
+        catch (GeneralSecurityException | CMSException | OperatorCreationException e)
+        {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * Set if external signing scenario should be used.
+     * If {@code false}, SignatureInterface would be used for signing.
+     * <p>
+     *     Default: {@code false}
+     * </p>
+     * @param externalSigning {@code true} if external signing should be performed
+     */
+    public void setExternalSigning(boolean externalSigning)
+    {
+        this.externalSigning = externalSigning;
+    }
+
+    public boolean isExternalSigning()
+    {
+        return externalSigning;
+    }
+    public CMSSignedData getSignature(InputStream content, char[] password) throws KeyStoreException, CertificateException, IOException,
+            NoSuchAlgorithmException, UnrecoverableKeyException, InvalidKeyException, SignatureException, CMSException, OperatorCreationException {
+        String configPath = "config.cfg";
+        Provider pkcs11Provider = Security.getProvider("SunPKCS11");
+        pkcs11Provider = pkcs11Provider.configure(configPath);
+        KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
+        pkcs11KeyStore.load(null, password);
+        java.util.Enumeration<String> aliases = pkcs11KeyStore.aliases();
+        int noAliases = 0;
+        List<String> aliasList = new ArrayList<>();
+        while (aliases.hasMoreElements()) {
+            String alias = aliases.nextElement();
+            System.out.println("Alias: " + alias);
+            noAliases += 1;
+            aliasList.add(alias);
+        }
+        System.out.println("Total number of alias are: " + noAliases);
+        String firstAlias = aliasList.isEmpty() ? null : aliasList.get(0);
+
+        if (firstAlias != null) {
+
+            X509Certificate cert = (X509Certificate) pkcs11KeyStore.getCertificate(firstAlias);
+            PrivateKey privateKey = (PrivateKey) pkcs11KeyStore.getKey(firstAlias, password);
+
+            // Create a CMSSignedDataGenerator and build the signature
+            CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
+            JcaContentSignerBuilder contentSignerBuilder = new JcaContentSignerBuilder("SHA256WithRSA");
+            contentSignerBuilder.setProvider(pkcs11Provider);
+            ContentSigner sha1Signer = contentSignerBuilder.build(privateKey);
+
+
+//            ContentSigner sha1Signer = new JcaContentSignerBuilder("SHA256WithRSA").build(privateKey);
+            gen.addSignerInfoGenerator(new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build()).build(sha1Signer, cert));
+            gen.addCertificates(new JcaCertStore(Arrays.asList(cert)));
+
+            // Create a CMSProcessable for the content (msg)
+            CMSProcessableInputStream msg = new CMSProcessableInputStream(content);
+
+            // Generate the signed data
+            CMSSignedData signedData = gen.generate(msg, false);
+
+            // Now you have the CMSSignedData object
+            return signedData;
+
+
+//            Certificate certificate = pkcs11KeyStore.getCertificate(firstAlias);
+//            System.out.println("Certificate for the first alias (" + firstAlias + "):");
+//            System.out.println(certificate);
+//            PrivateKey privateKey = (PrivateKey) pkcs11KeyStore.getKey(firstAlias, "12345678".toCharArray());
+//            Signature signature = Signature.getInstance("SHA256withRSA", pkcs11Provider); // Adjust the algorithm as needed
+//            signature.initSign(privateKey);
+//            signature.update(msg);
+//
+//            byte[] digitalSignature = signature.sign();
+//            try {
+//                CMSSignedData signedData = new CMSSignedData(digitalSignature);
+//                return signedData;
+            // Now you can work with the CMSSignedData object
+            // For example, you can extract signers, certificates, or verify the signature.
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                throw new SignatureException("Unable to sign4234324");
+//            }
+        }
+        else {
+            System.out.println("No aliases found in the PKCS11 KeyStore.");
+            throw new SignatureException("Unable to sign");
+        }
+    }
+
+    /**
+     * Checks whether the DSC is inserted or not
+     * Returns false in case case password is empty
+     * @param password to unlock the password.
+     * @return
+     * @throws KeyStoreException
+     * @throws CertificateException
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
+     */
+
+}

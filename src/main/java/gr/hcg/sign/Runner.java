@@ -35,6 +35,6 @@ public class Runner implements CommandLineRunner {
         File signedDocumentFile = new File(documentFile.getParent(), substring + "_signed.pdf");
         FileInputStream fis = new FileInputStream(documentFile);
         FileOutputStream fos = new FileOutputStream(signedDocumentFile);
-        signer.sign(fis, fos, null, null, null, null, null, null);
+        signer.sign(fis, fos);
     }
 }
