@@ -1,54 +1,91 @@
 <!DOCTYPE html>
-
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #fff;
+            border: 2px solid #ccc; /* Add a border */
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            text-align: center;
+        }
+
+        .logo img {
+            max-width: 100px; /* Adjust the logo size as needed */
+        }
+
+        .container h2 {
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-group input[type="submit"] {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .form-group input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
+<div class="container">
+    <div class="logo">
+        <img src="kda.png" alt="Logo" /> <!-- Replace "your-logo.png" with your logo file -->
+    </div>
+    <h2>Document Signing Portal</h2>
+    <form method="POST" action="/sign" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="apikey">API Key</label>
+            <input id="apikey" type="text" name="apikey" />
+        </div>
 
-<h1>Sign PDF </h1>
+        <div class="form-group">
+            <label for="file">Select a File</label>
+            <input id="file" type="file" name="file" />
+        </div>
 
-<!--/*@thymesVar id="message" type=""*/-->
-<p th:text="${message}" />
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" type="text" name="password" />
+        </div>
 
-<div th:if="${uuid!=null}">
-    File uploaded!<br />
-    UUID: <b><th:block th:text="${uuid}" /></b><br />
-    Path: <b><th:block th:text="${path}" /></b><br />
-    Sign Date: <b><th:block th:text="${signDate}" /></b>
+        <div class="form-group">
+            <input type="submit" value="Sign Document" />
+        </div>
+    </form>
 </div>
-
-<form method="POST" action="/sign" enctype="multipart/form-data">
-    <Label for="apikey">Api key<input id="apikey" type="text" name="apikey" /></Label><br/>
-
-    <Label for="file">File<input id="file" type="file" name="file" /></Label><br />
-<!--    <Label for="year">Year<input id="year" type="text" name="year" /></Label><br />-->
-<!--    <Label for="authority">Authority<input id="authority" type="text" name="authority" /></Label><br />-->
-<!--    <Label for="folder">Folder<input id="folder" type="text" name="folder" /></Label><br />-->
-<!--    <Label for="protocol">Protocol<input id="protocol" type="text" name="protocol" /></Label><br />-->
-    <Label for="password">Password<input id="password" type="text" name="password" /></Label><br />
-
-<!--    <Label for="signName">Signature Name<input id="signName" type="text" name="signName" /></Label><br/>-->
-<!--    <Label for="signReason">Signature Reason<input id="signReason" type="text" name="signReason" /></Label><br/>-->
-<!--    <Label for="signLocation">Signature Location<input id="signLocation" type="text" name="signLocation" /></Label><br/>-->
-<!--    <Label for="visibleLine1">Visible Line 1<input id="visibleLine1" type="text" name="visibleLine1" /></Label><br/>-->
-<!--    <Label for="visibleLine2">Visible Line 2<input id="visibleLine2" type="text" name="visibleLine2" /></Label><br/>-->
-
-<!--    <Label for="signed">Signed<input id="signed" type="checkbox" name="signed" value="true"/></Label><br />-->
-<!--    <Label for="json">Json output:<input id="json" type="checkbox" name="json" /></Label>-->
-
-    <br/><br/>
-    <input type="submit" value="Submit" />
-</form>
-
-
-<footer>
-    <!--/*@thymesVar id="config" type=""*/-->
-    <!--
-        <p th:text="${config}" />
-    -->
-</footer>
-
 </body>
 </html>
-
