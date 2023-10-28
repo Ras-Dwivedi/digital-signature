@@ -76,8 +76,9 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
     public String signatureName = "AUTO SIGNATURE";
     public String signatureLocation = "Kanpur";
     public String signatureReason = "IDENTICAL COPY";
-    public String visibleLine1 = "DIGITALLY SIGNED";
-    public String visibleLine2 = "Signed by Kanpur development authority";
+    public String visibleLine1 = "Digitally signed by "+ super.get_signer_name();
+//    public String visibleLine2 = "Signed by Kanpur Development Authority";
+    public String visibleLine2 = "From Kanpur Development authority";
     public String uuid = "123e4567-e89b-12d3-a456-426614174000";
 
 
@@ -96,10 +97,10 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
      * @throws CertificateException if the certificate is not valid as signing time
      * @throws IOException if no certificate could be found
      */
-    public CreateVisibleSignatureMemDsc(KeyStore keystore, char[] pin)
+    public CreateVisibleSignatureMemDsc(char[] pin)
             throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, IOException, CertificateException
     {
-        super(keystore, pin);
+        super(pin);
     }
 
     public byte[] getImageBytes()

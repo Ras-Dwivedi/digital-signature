@@ -27,6 +27,8 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
 import org.bouncycastle.cms.CMSException;
@@ -38,11 +40,14 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 
+import javax.security.auth.x500.X500Principal;
+
 /**
  * This class signs using the dsc dongle
  */
 public abstract class CreateSignatureBaseDsc implements SignatureInterface
 {
+    private static final Logger logger = LogManager.getLogger(Signer.class);
     private PrivateKey privateKey;
     private Certificate[] certificateChain;
     private String tsaUrl;
@@ -53,7 +58,6 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
      * Initialize the signature creator with a keystore (pkcs12) and pin that should be used for the
      * signature.
      *
-     * @param keystore is a pkcs12 keystore.
      * @param pin is the pin for the keystore / private key
      * @throws KeyStoreException if the keystore has not been initialized (loaded)
      * @throws NoSuchAlgorithmException if the algorithm for recovering the key cannot be found
@@ -61,73 +65,49 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
      * @throws CertificateException if the certificate is not valid as signing time
      * @throws IOException if no certificate could be found
      */
-    public CreateSignatureBaseDsc(KeyStore keystore, char[] pin)
-            throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, IOException, CertificateException
-    {
+    public CreateSignatureBaseDsc(char[] pin)
+            throws KeyStoreException, NoSuchAlgorithmException, IOException, CertificateException, UnrecoverableKeyException {
         // This function is currently grabbing the certificate form the pfx file. Need to change that
-
-        // grabs the first alias from the keystore and get the private key. An
-        // alternative method or constructor could be used for setting a specific
-        // alias that should be used.
-        Enumeration<String> aliases = keystore.aliases();
+        // AIM of this function is to create the certificate chain
+        this.pin = pin;
+        System.out.println("password is "+pin.toString());
+        String configPath = "config.cfg";
+        Provider pkcs11Provider = Security.getProvider("SunPKCS11");
+        pkcs11Provider = pkcs11Provider.configure(configPath);
+        KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
+        pkcs11KeyStore.load(null, pin);
+        java.util.Enumeration<String> aliases = pkcs11KeyStore.aliases();
         String alias;
         Certificate cert = null;
-        while (cert == null && aliases.hasMoreElements())
-        {
+        while (aliases.hasMoreElements()&&cert == null) {
             alias = aliases.nextElement();
-            setPrivateKey((PrivateKey) keystore.getKey(alias, pin));
-            Certificate[] certChain = keystore.getCertificateChain(alias);
+            setPrivateKey((PrivateKey) pkcs11KeyStore.getKey(alias, pin));
+            Certificate[] certChain = pkcs11KeyStore.getCertificateChain(alias);
             if (certChain != null)
-            {
+            {   logger.debug("certificate chain found");
                 setCertificateChain(certChain);
                 cert = certChain[0];
                 if (cert instanceof X509Certificate)
                 {
                     // avoid expired certificate
-                    ((X509Certificate) cert).checkValidity();
+//                    ((X509Certificate) cert).checkValidity();
 
                     SigUtils.checkCertificateUsage((X509Certificate) cert);
                 }
+            } else {
+                logger.debug("certificate chain not found");
+                logger.debug("checking for the certificate ");
+                Certificate certificate = pkcs11KeyStore.getCertificate(alias);
+                if (certificate!=null){
+                    logger.debug("certificate found");
+                    logger.debug(certificate.toString());
+                }
             }
         }
-
         if (cert == null)
         {
             throw new IOException("Could not find certificate");
         }
-        this.pin = pin;
-    }
-    public CreateSignatureBaseDsc(KeyStore keystore, String password)
-            throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, IOException, CertificateException
-    {
-        char[] pin = password.toCharArray();
-        Enumeration<String> aliases = keystore.aliases();
-        String alias;
-        Certificate cert = null;
-        while (cert == null && aliases.hasMoreElements())
-        {
-            alias = aliases.nextElement();
-            setPrivateKey((PrivateKey) keystore.getKey(alias, pin));
-            Certificate[] certChain = keystore.getCertificateChain(alias);
-            if (certChain != null)
-            {
-                setCertificateChain(certChain);
-                cert = certChain[0];
-                if (cert instanceof X509Certificate)
-                {
-                    // avoid expired certificate
-                    ((X509Certificate) cert).checkValidity();
-
-                    SigUtils.checkCertificateUsage((X509Certificate) cert);
-                }
-            }
-        }
-
-        if (cert == null)
-        {
-            throw new IOException("Could not find certificate");
-        }
-        this.pin = pin;
     }
     public final void setPrivateKey(PrivateKey privateKey)
     {
@@ -164,69 +144,14 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
      *
      * @throws IOException
      */
-//    @Override
-//    public byte[] sign(InputStream content, String password, boolean isDscInserted) throws IOException {
-//        if (isDscInserted){
-//            return signDsc(content, password);
-//        }
-//        else {
-//            return signPfx(content);
-//        }
-//
-//    }
-//    //    @Override
-//    public byte[] sign(InputStream content, boolean isDscInserted) throws IOException {
-//        if (isDscInserted){
-//            throw new IOException("Password is required for the digital signature.");
-//        }
-//        else {
-//            return signPfx(content);
-//        }
-//
-//    }
 
-//    @Override
-//    public byte[] sign(InputStream content) throws IOException{
-//        return signPfx(content);
-//    }
-//    public byte[] signPfx(InputStream content) throws IOException
-//    {
-//        // cannot be done private (interface)
-//        try
-//        {
-//            CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
-//            X509Certificate cert = (X509Certificate) certificateChain[0];
-//            ContentSigner sha1Signer = new JcaContentSignerBuilder("SHA256WithRSA").build(privateKey);
-//            gen.addSignerInfoGenerator(new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build()).build(sha1Signer, cert));
-//            gen.addCertificates(new JcaCertStore(Arrays.asList(certificateChain)));
-//            CMSProcessableInputStream msg = new CMSProcessableInputStream(content);
-//            CMSSignedData signedData = gen.generate(msg, false);
-//            if (tsaUrl != null && tsaUrl.length() > 0)
-//            {
-//                ValidationTimeStamp validation = new ValidationTimeStamp(tsaUrl);
-//                signedData = validation.addSignedTimeStamp(signedData);
-//
-//            }
-//            return signedData.getEncoded();
-//        }
-//        catch (GeneralSecurityException | CMSException | OperatorCreationException e)
-//        {
-//            throw new IOException(e);
-//        }
-//    }
     @Override
     public byte[] sign(InputStream content) throws IOException
     {
         // cannot be done private (interface)
         try
         {
-            CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
-            X509Certificate cert = (X509Certificate) certificateChain[0];
-            ContentSigner sha1Signer = new JcaContentSignerBuilder("SHA256WithRSA").build(privateKey);
-            gen.addSignerInfoGenerator(new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build()).build(sha1Signer, cert));
-            gen.addCertificates(new JcaCertStore(Arrays.asList(certificateChain)));
             CMSProcessableInputStream msg = new CMSProcessableInputStream(content);
-//            CMSSignedData signedData = gen.generate(msg, false);
             CMSSignedData signedData = getSignature(content, this.pin);
             if (tsaUrl != null && tsaUrl.length() > 0)
             {
@@ -259,6 +184,23 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
     {
         return externalSigning;
     }
+
+    /**
+     * Given the input stream and the password, signs by using the first alias in the dsc dongle
+     * Also extract the certficate from the dongle  and should append the certificate to the signature
+     * @param content
+     * @param password
+     * @return
+     * @throws KeyStoreException
+     * @throws CertificateException
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
+     * @throws UnrecoverableKeyException
+     * @throws InvalidKeyException
+     * @throws SignatureException
+     * @throws CMSException
+     * @throws OperatorCreationException
+     */
     public CMSSignedData getSignature(InputStream content, char[] password) throws KeyStoreException, CertificateException, IOException,
             NoSuchAlgorithmException, UnrecoverableKeyException, InvalidKeyException, SignatureException, CMSException, OperatorCreationException {
         String configPath = "config.cfg";
@@ -281,6 +223,7 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
         if (firstAlias != null) {
 
             X509Certificate cert = (X509Certificate) pkcs11KeyStore.getCertificate(firstAlias);
+            logger.debug(cert.toString());
             PrivateKey privateKey = (PrivateKey) pkcs11KeyStore.getKey(firstAlias, password);
 
             // Create a CMSSignedDataGenerator and build the signature
@@ -290,7 +233,6 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
             ContentSigner sha1Signer = contentSignerBuilder.build(privateKey);
 
 
-//            ContentSigner sha1Signer = new JcaContentSignerBuilder("SHA256WithRSA").build(privateKey);
             gen.addSignerInfoGenerator(new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build()).build(sha1Signer, cert));
             gen.addCertificates(new JcaCertStore(Arrays.asList(cert)));
 
@@ -304,24 +246,6 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
             return signedData;
 
 
-//            Certificate certificate = pkcs11KeyStore.getCertificate(firstAlias);
-//            System.out.println("Certificate for the first alias (" + firstAlias + "):");
-//            System.out.println(certificate);
-//            PrivateKey privateKey = (PrivateKey) pkcs11KeyStore.getKey(firstAlias, "12345678".toCharArray());
-//            Signature signature = Signature.getInstance("SHA256withRSA", pkcs11Provider); // Adjust the algorithm as needed
-//            signature.initSign(privateKey);
-//            signature.update(msg);
-//
-//            byte[] digitalSignature = signature.sign();
-//            try {
-//                CMSSignedData signedData = new CMSSignedData(digitalSignature);
-//                return signedData;
-            // Now you can work with the CMSSignedData object
-            // For example, you can extract signers, certificates, or verify the signature.
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                throw new SignatureException("Unable to sign4234324");
-//            }
         }
         else {
             System.out.println("No aliases found in the PKCS11 KeyStore.");
@@ -329,15 +253,32 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
         }
     }
 
-    /**
-     * Checks whether the DSC is inserted or not
-     * Returns false in case case password is empty
-     * @param password to unlock the password.
-     * @return
-     * @throws KeyStoreException
-     * @throws CertificateException
-     * @throws IOException
-     * @throws NoSuchAlgorithmException
-     */
+    public String get_signer_name() {
+        Certificate certificate = this.certificateChain[0];
+        try {
+            X500Principal x500Principal = ((X509Certificate)certificate).getSubjectX500Principal();
+            String dn = x500Principal.getName(X500Principal.RFC1779);
+            String cn = null;
 
+            String[] dnComponents = dn.split(", ");
+            for (String component : dnComponents) {
+                if (component.startsWith("CN=")) {
+                    cn = component.substring(3);
+                    break; // Once found, exit the loop
+                }
+            }
+
+            if (cn != null) {
+                // 'cn' contains the Common Name
+                return cn;
+            } else {
+                // Common Name not found
+                throw new Exception("name not found");
+            }
+            // 'name' will contain the distinguished name (DN) of the signer
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

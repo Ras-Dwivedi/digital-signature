@@ -11,6 +11,7 @@ import java.io.*;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
@@ -107,11 +108,7 @@ public class Signer {
         // Case of dsc based signature, change the code here
         InputStream ksInputStream = new FileInputStream(keystoreName);
 
-        KeyStore keystore = KeyStore.getInstance("PKCS12");
-        char[] pin = keystorePin.toCharArray();
-        keystore.load(ksInputStream, pin);
-
-        CreateVisibleSignatureMemDsc signing = new CreateVisibleSignatureMemDsc(keystore, pin.clone());
+        CreateVisibleSignatureMemDsc signing = new CreateVisibleSignatureMemDsc(password.toCharArray());
 
         InputStream imageResource = new FileInputStream(imageName);
         signing.setImageBytes(readBytes(imageResource));
