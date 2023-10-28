@@ -38,6 +38,8 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 
+import javax.security.auth.x500.X500Principal;
+
 public abstract class CreateSignatureBase implements SignatureInterface
 {
     private PrivateKey privateKey;
@@ -170,6 +172,34 @@ public abstract class CreateSignatureBase implements SignatureInterface
     public boolean isExternalSigning()
     {
         return externalSigning;
+    }
+    public String get_signer_name() {
+        Certificate certificate = this.certificateChain[0];
+        try {
+            X500Principal x500Principal = ((X509Certificate)certificate).getSubjectX500Principal();
+            String dn = x500Principal.getName(X500Principal.RFC1779);
+            String cn = null;
+
+            String[] dnComponents = dn.split(", ");
+            for (String component : dnComponents) {
+                if (component.startsWith("CN=")) {
+                    cn = component.substring(3);
+                    break; // Once found, exit the loop
+                }
+            }
+
+            if (cn != null) {
+                // 'cn' contains the Common Name
+                return cn;
+            } else {
+                // Common Name not found
+                throw new Exception("name not found");
+            }
+            // 'name' will contain the distinguished name (DN) of the signer
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 }

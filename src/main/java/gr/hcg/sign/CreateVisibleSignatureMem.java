@@ -72,8 +72,8 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
     public String signatureName = "AUTO SIGNATURE";
     public String signatureLocation = "Kanpur";
     public String signatureReason = "IDENTICAL COPY";
-    public String visibleLine1 = "DIGITALLY SIGNED";
-    public String visibleLine2 = "Signed by Kanpur development authority";
+    public String visibleLine1 = "Digitally signed by "+ super.get_signer_name();
+    public String visibleLine2 = "From Kanpur Development Authority";
     public String uuid = "123e4567-e89b-12d3-a456-426614174000";
 
     
@@ -366,19 +366,19 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
     private static void addHeader(PDPageContentStream cs, float w, float h, PDFont font) throws IOException {
         cs.setNonStrokingColor(Color.BLACK);
 
-        cs.addRect(10, h-8, w/3, 5);
+        cs.addRect(10, h-8, w/3+10, 5);
         cs.fill();
 
-        float fontSize = 10;
+        float fontSize = 13;
 
         cs.beginText();
         cs.setFont(font, fontSize);
         cs.setNonStrokingColor(Color.black);
 
-        cs.newLineAtOffset(w/3 + 40, h-8);
-        cs.showText("Digitally signed copy");
+        cs.newLineAtOffset(w/3 + 80, h-8);
+        cs.showText("Signature");
         cs.endText();
-        cs.addRect(2*w/3, h-8, w/3-10, 5);
+        cs.addRect(2*w/3-120, h-8, w/3+100, 5);
         cs.fill();
     }
 
@@ -393,16 +393,12 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
     private static void addCenterPart(PDPageContentStream cs, float w, float h, PDFont font, Calendar signDate) throws IOException {
 
         cs.beginText();
-        cs.setFont(font, 7);
+        cs.setFont(font, 10);
         cs.newLineAtOffset(w/2-40, h-40);
-        // cs.showText("Επιβεβαιώνεται το γνήσιο. Υπουργείο Ναυτιλίας");
-        // cs.newLine();
-        // cs.showText("και Νησιωτικής Πολιτικής / Verified by the ");
-        // cs.newLine();
-        // cs.showText("Ministry of Maritime Affairs and Insular Policy");
-        // cs.newLine();
-        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyMMddHHmmssSZ");
-        cs.showText(sdf2.format(signDate.getTime()));
+//        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyMMddHHmmssSZ");
+//        cs.showText(sdf2.format(signDate.getTime()));
+        cs.showText("This is a digitally signed document and does not require physical signature");
+        cs.newLine();
         cs.endText();
 
     }
