@@ -1,5 +1,7 @@
 package gr.hcg.sign;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,7 @@ import java.util.List;
 
 @Component
 public class Signer {
+    private static final Logger logger = LogManager.getLogger(Signer.class);
 
     @Value("${signer.keystore.pin}")
     public String keystorePin;
@@ -65,6 +68,7 @@ public class Signer {
     }
 
     public Calendar sign(InputStream is, OutputStream os) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
+        logger.info("Default signing with pfx file");
         InputStream ksInputStream = new FileInputStream(keystoreName);
 
         KeyStore keystore = KeyStore.getInstance("PKCS12");
@@ -82,12 +86,6 @@ public class Signer {
          * Calls Signing.signPdf to sign the pdf and returns the Calendar class
          * @param is
          * @param os
-         * @param signName
-         * @param signLocation
-         * @param signReason
-         * @param visibleLine1
-         * @param visibleLine2
-         * @param uuid
          * @return
          * @throws KeyStoreException
          * @throws CertificateException
@@ -99,9 +97,11 @@ public class Signer {
         // This function should decide whether the dsc has been inserted or not and in case no, then it should use pfx for signing
         if (password.isEmpty()){
             // In case password is not specified, it has to be pfx signature
+            logger.info("No password provided, signing with pfx file");
             return sign(is, os);
         }
         if (! isDscInserted(password)){
+            logger.info("No DSC detected, signing with pfx file");
             return sign(is, os);
         }
         // Case of dsc based signature, change the code here
