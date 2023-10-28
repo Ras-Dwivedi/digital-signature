@@ -51,6 +51,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * This is a second example for visual signing a pdf. It doesn't use the "design pattern" influenced
@@ -74,7 +75,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
     public String signatureReason = "IDENTICAL COPY";
     public String visibleLine1 = "Digitally signed by "+ super.get_signer_name();
     public String visibleLine2 = "From Kanpur Development Authority";
-    public String uuid = "123e4567-e89b-12d3-a456-426614174000";
+    public String uuid = UUID.randomUUID().toString();
 
     
     private Calendar signDate = null;
