@@ -412,11 +412,11 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
         graphicsState.setNonStrokingAlphaConstant(alpha);
         cs.setGraphicsStateParameters(graphicsState);
 
-        PDImageXObject img = PDImageXObject.createFromByteArray(doc, imageBytes, null);
-        img.setHeight(30);
-        img.setWidth(35);
-        cs.drawImage(img, w/2, h/2);
-        cs.restoreGraphicsState();
+//        PDImageXObject img = PDImageXObject.createFromByteArray(doc, imageBytes, null);
+//        img.setHeight(30);
+//        img.setWidth(35);
+//        cs.drawImage(img, w/2, h/2);
+//        cs.restoreGraphicsState();
     }
 
 

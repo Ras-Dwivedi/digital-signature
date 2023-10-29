@@ -25,8 +25,8 @@ public class Signer {
     @Value("${signer.keystore.name}")
     public String keystoreName;
 
-    @Value("${signer.image.name}")
-    public String imageName;
+//    @Value("${signer.image.name}")
+//    public String imageName;
 
     @Value("${signer.tsaurl}")
     public String tsaUrl;
@@ -78,8 +78,8 @@ public class Signer {
 
         CreateVisibleSignatureMem signing = new CreateVisibleSignatureMem(keystore, pin.clone());
 
-        InputStream imageResource = new FileInputStream(imageName);
-        signing.setImageBytes(readBytes(imageResource));
+//        InputStream imageResource = new FileInputStream(imageName);
+//        signing.setImageBytes(readBytes(imageResource));
 
         return signing.signPDF(is, os, tsaUrl, "Signature1");
         }
@@ -110,8 +110,8 @@ public class Signer {
 
         CreateVisibleSignatureMemDsc signing = new CreateVisibleSignatureMemDsc(password.toCharArray());
 
-        InputStream imageResource = new FileInputStream(imageName);
-        signing.setImageBytes(readBytes(imageResource));
+//        InputStream imageResource = new FileInputStream(imageName);
+//        signing.setImageBytes(readBytes(imageResource));
 
         return signing.signPDF(is, os, tsaUrl, "Signature1");
 
