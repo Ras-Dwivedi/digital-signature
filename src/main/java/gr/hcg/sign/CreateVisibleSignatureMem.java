@@ -159,7 +159,8 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
             if (rect == null)
             {
                 float width = doc.getPage(0).getMediaBox().getWidth();
-                Rectangle2D humanRect = new Rectangle2D.Float(0, 0, width, 120);
+                float height = doc.getPage(0).getMediaBox().getHeight();
+                Rectangle2D humanRect = new Rectangle2D.Float(2*width/3, height/3-40, width/5, 100);
                 rect = createSignatureRectangle(doc, humanRect);
             }
 
@@ -343,15 +344,16 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
                     cs.transform(initialScale);
                 }
 
-                // show background (just for debugging, to see the rect size + position)
-                //cs.setNonStrokingColor(new Color(.95f,.95f,.95f));
-                //cs.addRect(-5000, -5000, 10000, 10000);
-                //cs.fill();
-                addHeader(cs, w, h, font);
+//                // show background (just for debugging, to see the rect size + position)
+//                cs.setNonStrokingColor(new Color(.95f,.95f,.95f));
+//                cs.addRect(-5000, -5000, 10000, 10000);
+//                cs.fill();
+
+//                addHeader(cs, w, h, font);
                 cs.saveGraphicsState();
 
-                addFooter(cs, w, h, srcDoc);
-                addCenterPart(cs, w, h, font, this.signDate);
+//                addFooter(cs, w, h, srcDoc);
+//                addCenterPart(cs, w, h, font, this.signDate);
 
                 addRightPart(cs, font, w, h, this.signDate, this.visibleLine1, this.visibleLine2);
                 addCenterOverlay(cs, w, h, doc, imageBytes);
@@ -391,18 +393,18 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
         cs.endText();
     }
 
-    private static void addCenterPart(PDPageContentStream cs, float w, float h, PDFont font, Calendar signDate) throws IOException {
-
-        cs.beginText();
-        cs.setFont(font, 10);
-        cs.newLineAtOffset(w/2-40, h-40);
-//        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyMMddHHmmssSZ");
-//        cs.showText(sdf2.format(signDate.getTime()));
-        cs.showText("This is a digitally signed document and does not require physical signature");
-        cs.newLine();
-        cs.endText();
-
-    }
+//    private static void addCenterPart(PDPageContentStream cs, float w, float h, PDFont font, Calendar signDate) throws IOException {
+//
+//        cs.beginText();
+//        cs.setFont(font, 10);
+//        cs.newLineAtOffset(w/2-40, h-40);
+////        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyMMddHHmmssSZ");
+////        cs.showText(sdf2.format(signDate.getTime()));
+//        cs.showText("This is a digitally signed document and does not require physical signature");
+//        cs.newLine();
+//        cs.endText();
+//
+//    }
 
     private static void addCenterOverlay(PDPageContentStream cs, float w, float h, PDDocument doc, byte[] imageBytes) throws IOException {
 
