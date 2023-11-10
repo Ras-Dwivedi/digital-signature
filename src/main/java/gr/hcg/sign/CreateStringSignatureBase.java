@@ -40,16 +40,32 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import java.util.Properties;
 
 import javax.security.auth.x500.X500Principal;
-
+//@Component
 public class CreateStringSignatureBase
 {
-    @Value("${signer.keystore.pin}")
-    public String keystorePin;
+    private static final String FILE_PATH = "./src/main/resources/application.properties";
+    private static Properties properties;
+    static {
+        properties = new Properties();
+        try (FileInputStream fis = new FileInputStream(FILE_PATH)) {
+            properties.load(fis);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public static String getPropertyValue(String key) {
+        return properties.getProperty(key);
+    }
 
-    @Value("${signer.keystore.name}")
-    public String keystoreName;
+//    @Value("${signer.keystore.pin}")
+//    public String keystorePin;
+//
+//    @Value("${signer.keystore.name}")
+//    public String keystoreName;
 
     private PrivateKey privateKey;
     private Certificate[] certificateChain;
@@ -57,6 +73,43 @@ public class CreateStringSignatureBase
     private boolean externalSigning;
     private static final Logger logger = LogManager.getLogger(Signer.class);
 
+    public Certificate[] getCertChain(KeyStore keystore, char[] pin) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
+        Enumeration<String> aliases = keystore.aliases();
+        String alias;
+        Certificate cert = null;
+        while (cert == null && aliases.hasMoreElements()) {
+            alias = aliases.nextElement();
+            setPrivateKey((PrivateKey) keystore.getKey(alias, pin));
+            Certificate[] certChain = keystore.getCertificateChain(alias);
+            if(!(checkValidity(certChain)) ){
+                System.out.println("Invalid cert chain");
+            }
+            return certChain;
+        }
+        return new Certificate[0];
+    }
+
+
+    /**
+     * This methos checks the validity of all the certfiicates in the certificate chain
+     * @param certChain
+     * @return
+     */
+    public boolean checkValidity(Certificate[] certChain) {
+        for (int i=0; i< certChain.length;i++){
+            try {
+                Certificate cert = certChain[i];
+                if (cert instanceof X509Certificate) {
+                    ((X509Certificate) cert).checkValidity();
+                    SigUtils.checkCertificateUsage((X509Certificate) cert);
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return true;
+    }
     /**
      * Initialize the signature creator with a keystore (pkcs12) and pin that should be used for the
      * signature.
@@ -79,19 +132,22 @@ public class CreateStringSignatureBase
         String alias;
         Certificate cert = null;
         while (cert == null && aliases.hasMoreElements())
-        {
+        {   System.out.println("Another alias detected");
             alias = aliases.nextElement();
             setPrivateKey((PrivateKey) keystore.getKey(alias, pin));
             Certificate[] certChain = keystore.getCertificateChain(alias);
+            System.out.println("certificate chain is found");
             if (certChain != null)
             {
+                System.out.println("Inside the while loop");
                 setCertificateChain(certChain);
                 cert = certChain[0];
                 if (cert instanceof X509Certificate)
                 {
+                    System.out.println("certificate is x509");
                     // avoid expired certificate
                     ((X509Certificate) cert).checkValidity();
-
+                    System.out.println("certificate validity is checked.");
                     SigUtils.checkCertificateUsage((X509Certificate) cert);
                 }
             }
@@ -99,17 +155,22 @@ public class CreateStringSignatureBase
 
 
         if (cert == null)
-        {
+        {   System.out.println("found null certificate");
             throw new IOException("Could not find certificate");
         }
     }
     public CreateStringSignatureBase() throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
 
+        String keystoreName = properties.getProperty("signer.keystore.name");
+        String keystorePin = properties.getProperty("signer.keystore.pin");
+
+        System.out.println(keystoreName);
         InputStream ksInputStream = new FileInputStream(keystoreName);
         KeyStore keystore = KeyStore.getInstance("PKCS12");
         char[] pin = keystorePin.toCharArray();
         keystore.load(ksInputStream, pin);
-        new CreateStringSignatureBase(keystore,pin);
+        this.certificateChain = getCertChain(keystore,pin);
+//        this(keystore,pin.clone());
     }
 
 
@@ -125,7 +186,7 @@ public class CreateStringSignatureBase
 
     public Certificate[] getCertificateChain()
     {
-        return certificateChain;
+        return this.certificateChain;
     }
 
     public void setTsaUrl(String tsaUrl)
@@ -148,11 +209,11 @@ public class CreateStringSignatureBase
         try
         {
             CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
-            X509Certificate cert = (X509Certificate) certificateChain[0];
+            X509Certificate cert = (X509Certificate) this.certificateChain[0];
             getPublicKey(cert);
             ContentSigner sha1Signer = new JcaContentSignerBuilder("SHA256WithRSA").build(privateKey);
             gen.addSignerInfoGenerator(new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build()).build(sha1Signer, cert));
-            gen.addCertificates(new JcaCertStore(Arrays.asList(certificateChain)));
+            gen.addCertificates(new JcaCertStore(Arrays.asList(this.certificateChain)));
             CMSSignedData signedData = gen.generate(new CMSProcessableByteArray(msg.getBytes()), true);
             return signedData;
 //            byte[] bytes = signedData.getEncoded();
@@ -275,7 +336,7 @@ public class CreateStringSignatureBase
      * @throws IOException
      * @throws JSONException
      */
-    public String getJson(CMSSignedData signedData) throws IOException, JSONException {
+    public String cmsToBase64(CMSSignedData signedData) throws IOException, JSONException {
         byte[] bytes = signedData.getEncoded();
         String base64EncodedBytes = Base64.toBase64String(bytes);
         return base64EncodedBytes;

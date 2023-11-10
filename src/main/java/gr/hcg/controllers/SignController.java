@@ -20,6 +20,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
@@ -145,20 +146,51 @@ public class SignController {
      *  * api key: to be removed
      *  * dsc password
      */
-    public  ResponseEntity<String> signString(Model model,
-                                              @RequestParam(value = "plainText") String plainText,
-                                                @RequestParam(value = "password") Optional<String> password,
-                                                HttpServletResponse response ) throws UnrecoverableKeyException, CertificateException, KeyStoreException, NoSuchAlgorithmException, IOException {
-        CreateStringSignatureBase signatureBase = new CreateStringSignatureBase();
-        CMSSignedData sign = signatureBase.sign(plainText);
-        String signerInfo = signatureBase.getSignerInfo(sign);
-        // Set headers for the response
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-        String jsonResponse = "{ \"sign:"+sign+"}\"";
-        return  ResponseEntity.ok().headers(headers)
-                .body(jsonResponse);
+    public  ResponseEntity<String> signString(
+            @RequestBody StringSignModel requestModel,
+            HttpServletResponse response ) throws UnrecoverableKeyException, CertificateException, KeyStoreException, NoSuchAlgorithmException, IOException {
+        String plainText = requestModel.getPlainText();
+        Optional<String> password = Optional.ofNullable(requestModel.getPassword());
 
+        CreateStringSignatureBase signatureBase = new CreateStringSignatureBase();
+        try {
+            CMSSignedData sign = signatureBase.sign(plainText);
+            String signerInfo = signatureBase.getSignerInfo(sign);
+            String signData = signatureBase.cmsToBase64(sign);
+            // Set headers for the response
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+            String jsonResponse = "{ \"sign:"+signData+"}\"";
+            return  ResponseEntity.ok().headers(headers)
+                    .body(jsonResponse);
+        } catch (Exception e){
+            e.printStackTrace();
+            return  ResponseEntity.ok()
+                    .body("{sign: null pointer}");
+        }
+    }
+}
+
+class StringSignModel {
+    private String plainText;
+    private String password;
+
+    // Getters and setters
+
+    public String getPlainText() {
+        return plainText;
+    }
+
+    public void setPlainText(String plainText) {
+        this.plainText = plainText;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
