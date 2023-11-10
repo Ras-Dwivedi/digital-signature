@@ -4,8 +4,11 @@ import com.google.gson.JsonObject;
 import gr.hcg.check.PDFSignatureInfo;
 import gr.hcg.check.PDFSignatureInfoParser;
 import gr.hcg.services.UploadDocumentService;
+import gr.hcg.sign.CreateStringSignatureBase;
 import gr.hcg.sign.Signer;
 import gr.hcg.views.JsonView;
+import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
+import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.tsp.TSPException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -133,54 +136,29 @@ public class SignController {
     }
 
 
-//    @PostMapping("/signString")
-//    /**
-//     *
-//     * This function takes a string as an returns the signature on the string along with the signature details
-//     * params
-//     *  * string
-//     *  * api key: to be removed
-//     *  * dsc password
-//     */
-//    public  ResponseEntity<byte[]> signString(Model model,
-//                                              @RequestParam(value = "plainText") String plainText,
-//                                                @RequestParam(value = "password") Optional<String> password,
-//                                                HttpServletResponse response ) {
-//
-//        Optional<Boolean> json = Optional.of(true);
-//        model.addAttribute("uuid", null);
-//        model.addAttribute("path", null);
-//        try {
-//            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-//            Calendar signDate;
-//            if(password.isPresent()){
-//                // sign string with dsc
-//                signDate=signer.sign(file.getInputStream(), bos, password.orElse(""));
-//            } else {
-//                // sign with the pfx file
-//                signDate=signer.sign(file.getInputStream(), bos);
-//            }
-//
-//            // At this point I should be able to return the json
-//            // Get the signed PDF bytes
-//            byte[] signedPdfBytes = bos.toByteArray();
-//
-//            // Set headers for the response
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.setContentType(MediaType.APPLICATION_PDF);
-//            headers.setContentDispositionFormData("attachment", "signed_document.pdf");
-//            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-//
-//            // Return the signed PDF in the response
-//            return new ResponseEntity<>(signedPdfBytes, headers, HttpStatus.OK);
-//
-//        } catch (IOException | KeyStoreException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | IllegalStateException e) {
-//            model.addAttribute("error", true);
-//            model.addAttribute("message", "Error: " + e.getMessage());
-//            e.printStackTrace();
-//            //return "sign";
-//            return respondHtmlOrJson(json, model, response);
-//        }
-//
-//    }
+    @PostMapping("/signString")
+    /**
+     *
+     * This function takes a string as an returns the signature on the string along with the signature details
+     * params
+     *  * string
+     *  * api key: to be removed
+     *  * dsc password
+     */
+    public  ResponseEntity<String> signString(Model model,
+                                              @RequestParam(value = "plainText") String plainText,
+                                                @RequestParam(value = "password") Optional<String> password,
+                                                HttpServletResponse response ) throws UnrecoverableKeyException, CertificateException, KeyStoreException, NoSuchAlgorithmException, IOException {
+        CreateStringSignatureBase signatureBase = new CreateStringSignatureBase();
+        CMSSignedData sign = signatureBase.sign(plainText);
+        String signerInfo = signatureBase.getSignerInfo(sign);
+        // Set headers for the response
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+        String jsonResponse = "{ \"sign:"+sign+"}\"";
+        return  ResponseEntity.ok().headers(headers)
+                .body(jsonResponse);
+
+    }
 }

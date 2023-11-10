@@ -16,15 +16,14 @@
 
 package gr.hcg.sign;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.security.*;
 import java.security.cert.*;
 import java.security.cert.Certificate;
 import java.util.*;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bouncycastle.asn1.pkcs.RSAPublicKey;
 import org.bouncycastle.jce.provider.X509CertificateObject;
 import org.bouncycastle.util.encoders.Base64;
@@ -40,15 +39,23 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.security.auth.x500.X500Principal;
 
-public abstract class CreateSignatureBase implements SignatureInterface
+public class CreateStringSignatureBase
 {
+    @Value("${signer.keystore.pin}")
+    public String keystorePin;
+
+    @Value("${signer.keystore.name}")
+    public String keystoreName;
+
     private PrivateKey privateKey;
     private Certificate[] certificateChain;
     private String tsaUrl;
     private boolean externalSigning;
+    private static final Logger logger = LogManager.getLogger(Signer.class);
 
     /**
      * Initialize the signature creator with a keystore (pkcs12) and pin that should be used for the
@@ -62,7 +69,7 @@ public abstract class CreateSignatureBase implements SignatureInterface
      * @throws CertificateException if the certificate is not valid as signing time
      * @throws IOException if no certificate could be found
      */
-    public CreateSignatureBase(KeyStore keystore, char[] pin)
+    public CreateStringSignatureBase(KeyStore keystore, char[] pin)
             throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, IOException, CertificateException
     {
         // grabs the first alias from the keystore and get the private key. An
@@ -90,11 +97,21 @@ public abstract class CreateSignatureBase implements SignatureInterface
             }
         }
 
+
         if (cert == null)
         {
             throw new IOException("Could not find certificate");
         }
     }
+    public CreateStringSignatureBase() throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
+
+        InputStream ksInputStream = new FileInputStream(keystoreName);
+        KeyStore keystore = KeyStore.getInstance("PKCS12");
+        char[] pin = keystorePin.toCharArray();
+        keystore.load(ksInputStream, pin);
+        new CreateStringSignatureBase(keystore,pin);
+    }
+
 
     public final void setPrivateKey(PrivateKey privateKey)
     {
@@ -117,24 +134,16 @@ public abstract class CreateSignatureBase implements SignatureInterface
     }
 
     /**
-     * SignatureInterface sample implementation.
-     *<p>
-     * This method will be called from inside of the pdfbox and create the PKCS #7 signature.
-     * The given InputStream contains the bytes that are given by the byte range.
-     *<p>
-     * This method is for internal use only.
-     *<p>
-     * Use your favorite cryptographic library to implement PKCS #7 signature creation.
-     * If you want to create the hash and the signature separately (e.g. to transfer only the hash
-     * to an external application), read <a href="https://stackoverflow.com/questions/41767351">this
-     * answer</a> or <a href="https://stackoverflow.com/questions/56867465">this answer</a>.
-     *
+     * Signs the message using the key stored in the class
+     * returns the base64 encoded string of CMSSignedData
+     * @param msg
+     * @return
      * @throws IOException
      */
 //    @Override
-    @Override
-    public byte[] sign(InputStream content) throws IOException
+    public CMSSignedData sign(String msg) throws IOException
     {
+        // ToDO handle  the DSC operation here only
         // cannot be done private (interface)
         try
         {
@@ -144,45 +153,11 @@ public abstract class CreateSignatureBase implements SignatureInterface
             ContentSigner sha1Signer = new JcaContentSignerBuilder("SHA256WithRSA").build(privateKey);
             gen.addSignerInfoGenerator(new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build()).build(sha1Signer, cert));
             gen.addCertificates(new JcaCertStore(Arrays.asList(certificateChain)));
-            CMSProcessableInputStream msg = new CMSProcessableInputStream(content);
-            String testString = "ras";
-//            CMSProcessableInputStream msg = stringToCMSProcessableInputStream(testString);
-            CMSSignedData signedData = gen.generate(new CMSProcessableByteArray(testString.getBytes()), true);
-            if (tsaUrl != null && tsaUrl.length() > 0)
-            {
-                ValidationTimeStamp validation = new ValidationTimeStamp(tsaUrl);
-                signedData = validation.addSignedTimeStamp(signedData);
-
-            }
-            System.out.println("signed data is ");
-            System.out.println(signedData.toString());
-            System.out.println(signedData.getSignedContent().toString());
-            System.out.println(signedData.toASN1Structure());
-            System.out.println(signedData.getSignedContentTypeOID());
-            SignerInformation si = (SignerInformation) signedData.getSignerInfos().getSigners().toArray()[0];
-            System.out.println("Printing the signature");
-            System.out.println("==================================");
-            System.out.println(si.getSID());
-            System.out.println(new String(si.getSignature()));
-            System.out.println(bytesToHex(si.getSignature()));
-            System.out.println(signedData.getCertificates());
-            System.out.println(signedData.getDigestAlgorithmIDs());
-            System.out.println(getSignerInfo(signedData));
-            System.out.println(getSignature(signedData));
-            System.out.println(getMessage(signedData));
-            System.out.println(getCertificate(signedData));
-            System.out.println("getting json");
-            System.out.println(getJson(signedData));
-            System.out.println(verify(signedData));
-            System.out.println("==================================");
-            System.out.println("==================================");
-            System.out.println("==================================");
-
-            System.out.println(signedData.getSignerInfos());
-            System.out.println(signedData.getSignerInfos().size());
-            System.out.println(signedData.getSignerInfos().getSigners().stream().findFirst());
-            System.out.println(signedData.getSignedContent().getContent());
-            return signedData.getEncoded();
+            CMSSignedData signedData = gen.generate(new CMSProcessableByteArray(msg.getBytes()), true);
+            return signedData;
+//            byte[] bytes = signedData.getEncoded();
+//            String base64EncodedBytes = Base64.toBase64String(bytes);
+//            return base64EncodedBytes;
         }
         catch (Exception e)
         {
@@ -191,22 +166,22 @@ public abstract class CreateSignatureBase implements SignatureInterface
     }
 
     /**
-     * Set if external signing scenario should be used.
-     * If {@code false}, SignatureInterface would be used for signing.
-     * <p>
-     *     Default: {@code false}
-     * </p>
-     * @param externalSigning {@code true} if external signing should be performed
+     * This method takes the cms data as base64 encoded string and then verifies the signature
+     * @param cmsData
+     * @return
      */
-    public void setExternalSigning(boolean externalSigning)
-    {
-        this.externalSigning = externalSigning;
+    public boolean verifyString(String cmsData) throws Exception {
+        try {
+            CMSSignedData cmsSignedData = getCmsFromBase64(cmsData);
+            return verify(cmsSignedData);
+        }
+        catch (Exception e){
+            logger.debug("unable to verify the signature");
+            logger.debug(e.toString());
+            return false;
+        }
     }
 
-    public boolean isExternalSigning()
-    {
-        return externalSigning;
-    }
     public String get_signer_name() {
         Certificate certificate = this.certificateChain[0];
         try {
@@ -291,17 +266,7 @@ public abstract class CreateSignatureBase implements SignatureInterface
         }
         return null;
     }
-//    public String getDigest(CMSSignedData signedData){
-//        SignerInformationStore signerInfos = signedData.getSignerInfos();
-//        System.out.println("Total signers: "+signerInfos.getSigners().size());
-//        for (SignerInformation signerInfo : signerInfos.getSigners()) {
-//            System.out.println("Signature:");
-//            signerInfo.
-//            byte[] hash  = signerInfo.getContentDigest();
-//            return  bytesToHex(hash);
-//        }
-//        return null;
-//    }
+
 
     /**
      * returns the base64 version of the CMSSignedData
@@ -368,26 +333,30 @@ public abstract class CreateSignatureBase implements SignatureInterface
         System.out.println("key: " + bytesToHex(publicKey.getEncoded()));
     }
     public boolean verify(CMSSignedData cmsSignedData) throws Exception {
-//        SignerInformationStore signers = cmsSignedData.getSignerInfos();
-//        Iterator<SignerInformation> it = signers.getSigners().iterator();
-        SignerInformation signerInformation = cmsSignedData.getSignerInfos().getSigners().iterator().next();
-        X509Certificate x509Certificate = getFirstCertificate(cmsSignedData);
-        getPublicKey(x509Certificate);
-//        verify the certificate
-        // Ideally you should get the certificate from somewhere else and then match it?
-        SignerInformationVerifier signerInformationVerifier = new JcaSimpleSignerInfoVerifierBuilder().build(x509Certificate);
-        try {
-            Boolean verify = signerInformation.verify(signerInformationVerifier); // only verifies the signer information and not the signature
-            System.out.println("getting hash");
-            System.out.println(bytesToHex(signerInformation.getContentDigest()));
-            return verify;
-        } catch (Exception e){
-            System.out.println(e);
-            return false;
+        Iterator<SignerInformation> it = cmsSignedData.getSignerInfos().getSigners().iterator();
+        boolean verified = true;
+        while (it.hasNext()) {
+            SignerInformation signerInformation = it.next();
+//        SignerInformation signerInformation = cmsSignedData.getSignerInfos().getSigners().iterator().next();
+            X509Certificate x509Certificate = getFirstCertificate(cmsSignedData);
+            getPublicKey(x509Certificate);
+//        verify the certificate. Ideally you should get the certificate from somewhere else and then match it?
+            SignerInformationVerifier signerInformationVerifier = new JcaSimpleSignerInfoVerifierBuilder().build(x509Certificate);
+            try {
+                Boolean verify = signerInformation.verify(signerInformationVerifier); // only verifies the signer information and not the signature
+                if (verify == false) {
+                    verified = false;
+                }
+//            System.out.println("getting hash");
+//            System.out.println(bytesToHex(signerInformation.getContentDigest()));
+//            return verify;
+            } catch (Exception e) {
+                System.out.println(e);
+//            return false;
+            }
         }
-//        signerInformationVerifier.getContentVerifier().
-//        SignerInformationVerifierProvider signerInformationVerifierProvider = (SignerInformationVerifierProvider) signerInformationVerifier;
-//        return cmsSignedData.verifySignatures(signerInformationVerifierProvider);
+        return verified;
+
     }
     public static X509Certificate getCertificate(X509CertificateHolder certificateHolder) throws Exception {
         byte[] encodedCertificate = certificateHolder.getEncoded();
