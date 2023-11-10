@@ -131,4 +131,56 @@ public class SignController {
         }
 
     }
+
+
+//    @PostMapping("/signString")
+//    /**
+//     *
+//     * This function takes a string as an returns the signature on the string along with the signature details
+//     * params
+//     *  * string
+//     *  * api key: to be removed
+//     *  * dsc password
+//     */
+//    public  ResponseEntity<byte[]> signString(Model model,
+//                                              @RequestParam(value = "plainText") String plainText,
+//                                                @RequestParam(value = "password") Optional<String> password,
+//                                                HttpServletResponse response ) {
+//
+//        Optional<Boolean> json = Optional.of(true);
+//        model.addAttribute("uuid", null);
+//        model.addAttribute("path", null);
+//        try {
+//            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//            Calendar signDate;
+//            if(password.isPresent()){
+//                // sign string with dsc
+//                signDate=signer.sign(file.getInputStream(), bos, password.orElse(""));
+//            } else {
+//                // sign with the pfx file
+//                signDate=signer.sign(file.getInputStream(), bos);
+//            }
+//
+//            // At this point I should be able to return the json
+//            // Get the signed PDF bytes
+//            byte[] signedPdfBytes = bos.toByteArray();
+//
+//            // Set headers for the response
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setContentType(MediaType.APPLICATION_PDF);
+//            headers.setContentDispositionFormData("attachment", "signed_document.pdf");
+//            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+//
+//            // Return the signed PDF in the response
+//            return new ResponseEntity<>(signedPdfBytes, headers, HttpStatus.OK);
+//
+//        } catch (IOException | KeyStoreException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | IllegalStateException e) {
+//            model.addAttribute("error", true);
+//            model.addAttribute("message", "Error: " + e.getMessage());
+//            e.printStackTrace();
+//            //return "sign";
+//            return respondHtmlOrJson(json, model, response);
+//        }
+//
+//    }
 }
