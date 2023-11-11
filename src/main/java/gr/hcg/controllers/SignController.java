@@ -1,19 +1,12 @@
 package gr.hcg.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonObject;
-import gr.hcg.check.PDFSignatureInfo;
-import gr.hcg.check.PDFSignatureInfoParser;
 import gr.hcg.services.UploadDocumentService;
 import gr.hcg.sign.CreateStringSignatureBase;
 import gr.hcg.sign.Signer;
 import gr.hcg.views.JsonView;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
-import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
-import org.bouncycastle.tsp.TSPException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,17 +19,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.naming.InvalidNameException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.text.SimpleDateFormat;
 import java.util.*;
-
-import org.springframework.core.io.ByteArrayResource;
 
 @Controller
 public class SignController {
@@ -159,12 +148,13 @@ public class SignController {
         CreateStringSignatureBase signatureBase = new CreateStringSignatureBase();
         try {
             CMSSignedData sign = signatureBase.sign(plainText);
-            String signerInfo = signatureBase.getSignerInfo(sign);
+            String signerInfo = signatureBase.getSignerName();
             String signData = signatureBase.cmsToBase64(sign);
             Map<String, Object> responseMap = new HashMap<>();
             responseMap.put("success", true);
             responseMap.put("sign", signData);
             responseMap.put("signerInfo", signerInfo);
+            responseMap.put("timestamp", System.currentTimeMillis());
             return responseMap;
         } catch (Exception e){
             e.printStackTrace();
@@ -186,7 +176,6 @@ public class SignController {
         }
         String signature = request.get("signature");
         CreateStringSignatureBase signatureBase = new CreateStringSignatureBase();
-//        CMSSignedData cmsSignedData = signatureBase.getCmsFromBase64(signature);
         try {
             boolean isVerified = signatureBase.verifyString(signature);
 

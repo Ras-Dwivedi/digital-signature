@@ -24,13 +24,11 @@ import java.util.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.asn1.pkcs.RSAPublicKey;
 import org.bouncycastle.jce.provider.X509CertificateObject;
 import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.DecoderException;
 import org.json.JSONException;
 
-import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
 import org.bouncycastle.cms.*;
@@ -40,8 +38,7 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+
 import java.util.Properties;
 
 import javax.security.auth.x500.X500Principal;
@@ -58,15 +55,9 @@ public class CreateStringSignatureBase
             e.printStackTrace();
         }
     }
-    public static String getPropertyValue(String key) {
-        return properties.getProperty(key);
-    }
-
-//    @Value("${signer.keystore.pin}")
-//    public String keystorePin;
-//
-//    @Value("${signer.keystore.name}")
-//    public String keystoreName;
+//    public static String getPropertyValue(String key) {
+//        return properties.getProperty(key);
+//    }
 
     private PrivateKey privateKey;
     private Certificate[] certificateChain;
@@ -133,22 +124,19 @@ public class CreateStringSignatureBase
         String alias;
         Certificate cert = null;
         while (cert == null && aliases.hasMoreElements())
-        {   System.out.println("Another alias detected");
+        {
+            logger.debug("Alias detected");
             alias = aliases.nextElement();
             setPrivateKey((PrivateKey) keystore.getKey(alias, pin));
             Certificate[] certChain = keystore.getCertificateChain(alias);
-            System.out.println("certificate chain is found");
             if (certChain != null)
             {
-                System.out.println("Inside the while loop");
                 setCertificateChain(certChain);
                 cert = certChain[0];
                 if (cert instanceof X509Certificate)
                 {
-                    System.out.println("certificate is x509");
                     // avoid expired certificate
                     ((X509Certificate) cert).checkValidity();
-                    System.out.println("certificate validity is checked.");
                     SigUtils.checkCertificateUsage((X509Certificate) cert);
                 }
             }
@@ -160,6 +148,15 @@ public class CreateStringSignatureBase
             throw new IOException("Could not find certificate");
         }
     }
+
+    /**
+     * Default constructor with no values
+     * @throws IOException
+     * @throws KeyStoreException
+     * @throws CertificateException
+     * @throws NoSuchAlgorithmException
+     * @throws UnrecoverableKeyException
+     */
     public CreateStringSignatureBase() throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
 
         String keystoreName = properties.getProperty("signer.keystore.name");
@@ -175,21 +172,39 @@ public class CreateStringSignatureBase
     }
 
 
+    /**
+     * Sets the private key
+     * Since the private key is not accessible in case of PKCS12, this should not be used there
+     * @param privateKey
+     */
     public final void setPrivateKey(PrivateKey privateKey)
     {
         this.privateKey = privateKey;
     }
 
+    /**
+     * Sets the Certificate chain
+     * @param certificateChain
+     */
     public final void setCertificateChain(final Certificate[] certificateChain)
     {
         this.certificateChain = certificateChain;
     }
 
+    /**
+     * getter for the Certificate Chain
+     * @return
+     */
     public Certificate[] getCertificateChain()
     {
         return this.certificateChain;
     }
 
+    /**
+     * Gets TSA URL
+     * Ideally this function should not be used
+     * @param tsaUrl
+     */
     public void setTsaUrl(String tsaUrl)
     {
         this.tsaUrl = tsaUrl;
@@ -217,9 +232,6 @@ public class CreateStringSignatureBase
             gen.addCertificates(new JcaCertStore(Arrays.asList(this.certificateChain)));
             CMSSignedData signedData = gen.generate(new CMSProcessableByteArray(msg.getBytes()), true);
             return signedData;
-//            byte[] bytes = signedData.getEncoded();
-//            String base64EncodedBytes = Base64.toBase64String(bytes);
-//            return base64EncodedBytes;
         }
         catch (Exception e)
         {
@@ -252,7 +264,11 @@ public class CreateStringSignatureBase
 
     }
 
-    public String get_signer_name() {
+    /**
+     * Returns the signer name for the first certificate in the certificate chain
+     * @return Signer name
+     */
+    public String getSignerName() {
         Certificate certificate = this.certificateChain[0];
         try {
             X500Principal x500Principal = ((X509Certificate)certificate).getSubjectX500Principal();
@@ -280,21 +296,21 @@ public class CreateStringSignatureBase
             return null;
         }
     }
-    public CMSProcessableInputStream stringToCMSProcessableInputStream(String inputString) {
-        try {
-            // Convert the String to an InputStream
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
-
-            // Wrap the InputStream with CMSProcessableInputStream
-            CMSProcessableInputStream cmsInputStream = new CMSProcessableInputStream(inputStream);
-
-            return cmsInputStream;
-        } catch (UnsupportedEncodingException e) {
-            // Handle the exception, e.g., by throwing or logging it
-            e.printStackTrace();
-            return null;
-        }
-    }
+//    public CMSProcessableInputStream stringToCMSProcessableInputStream(String inputString) {
+//        try {
+//            // Convert the String to an InputStream
+//            ByteArrayInputStream inputStream = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
+//
+//            // Wrap the InputStream with CMSProcessableInputStream
+//            CMSProcessableInputStream cmsInputStream = new CMSProcessableInputStream(inputStream);
+//
+//            return cmsInputStream;
+//        } catch (UnsupportedEncodingException e) {
+//            // Handle the exception, e.g., by throwing or logging it
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
     public String bytesToHex(byte[] byteArray) {
         StringBuilder hexString = new StringBuilder();
         for (byte b : byteArray) {
@@ -304,6 +320,13 @@ public class CreateStringSignatureBase
         }
         return hexString.toString();
     }
+
+    /**
+     * Given the CMSSignedData, returns the message that was signed in the signed data
+     * @param signedData
+     * @return message plain text : String
+     * @throws IOException
+     */
     public String getMessage(CMSSignedData signedData) throws IOException {
         CMSProcessable signedContent = signedData.getSignedContent();
         if (signedContent instanceof CMSProcessableByteArray) {
@@ -315,6 +338,12 @@ public class CreateStringSignatureBase
             // Handle other types of CMSProcessable if needed
         }
     }
+
+    /**
+     * From the CMS signed data, returns the signer information
+     * @param signedData
+     * @return
+     */
     public String getSignerInfo(CMSSignedData signedData){
         SignerInformationStore signerInfos = signedData.getSignerInfos();
         System.out.println("Total signers: "+signerInfos.getSigners().size());
@@ -322,10 +351,17 @@ public class CreateStringSignatureBase
             System.out.println("Signer Identity:");
             System.out.println(signerInfo.getSID().getIssuer());
             System.out.println(signerInfo.getSID().getSerialNumber());
-            return signerInfo.getSID().toString();
+//            return signerInfo.getSID().toString();
+            return signerInfo.getSID().getIssuer().toString();
         }
         return null;
     }
+
+    /**
+     * Extracts the signature from the CMSSignedData
+     * @param signedData
+     * @return
+     */
     public String getSignature(CMSSignedData signedData){
         SignerInformationStore signerInfos = signedData.getSignerInfos();
         System.out.println("Total signers: "+signerInfos.getSigners().size());
@@ -398,13 +434,29 @@ public class CreateStringSignatureBase
         return null;
     }
 
+    /**
+     * Extracts the public key from the certificate
+     * This function is partially developed and returns the hex encoding of the public key
+     * ToDO: in case of RSA public key, return the modulus and the exponent separately
+     * @param cert
+     */
     public void getPublicKey(X509Certificate cert){
-        // -- pritinting the public key
         PublicKey publicKey = cert.getPublicKey();
         System.out.println("Algorithm: " + publicKey.getAlgorithm());
         System.out.println("Format: " + publicKey.getFormat());
         System.out.println("key: " + bytesToHex(publicKey.getEncoded()));
     }
+
+    /**
+     * Verifies whether the CMS signed data is correct or not
+     * verifies the signature on the signed data, from the signers
+     * Verifies the signer certificate with the help of the providers
+     * @param cmsSignedData
+     * @return
+     * @throws CertificateException
+     * @throws IOException
+     * @throws OperatorCreationException
+     */
     public boolean verify(CMSSignedData cmsSignedData) throws CertificateException, IOException, OperatorCreationException {
         Iterator<SignerInformation> it = cmsSignedData.getSignerInfos().getSigners().iterator();
         boolean verified = true;
@@ -420,9 +472,6 @@ public class CreateStringSignatureBase
                 if (verify == false) {
                     verified = false;
                 }
-//            System.out.println("getting hash");
-//            System.out.println(bytesToHex(signerInformation.getContentDigest()));
-//            return verify;
             } catch (Exception e) {
                 System.out.println(e);
 //            return false;
@@ -431,6 +480,14 @@ public class CreateStringSignatureBase
         return verified;
 
     }
+
+    /**
+     * Extracts the X509 Certificate from the certificate holder
+     * @param certificateHolder
+     * @return
+     * @throws IOException
+     * @throws CertificateException
+     */
     public static X509Certificate getCertificate(X509CertificateHolder certificateHolder) throws IOException, CertificateException {
         byte[] encodedCertificate = certificateHolder.getEncoded();
 
