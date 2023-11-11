@@ -1,5 +1,6 @@
 package gr.hcg.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
 import gr.hcg.check.PDFSignatureInfo;
 import gr.hcg.check.PDFSignatureInfoParser;
@@ -7,7 +8,10 @@ import gr.hcg.services.UploadDocumentService;
 import gr.hcg.sign.CreateStringSignatureBase;
 import gr.hcg.sign.Signer;
 import gr.hcg.views.JsonView;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
+import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.tsp.TSPException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -33,10 +34,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+
 import org.springframework.core.io.ByteArrayResource;
 
 @Controller
@@ -56,6 +55,7 @@ public class SignController {
 
     @Autowired
     UploadDocumentService uploadDocumentService;
+    private static final Logger logger = LogManager.getLogger(Signer.class);
 
     @GetMapping("/sign")
     public ModelAndView home(Model model) {
@@ -137,7 +137,7 @@ public class SignController {
     }
 
 
-    @PostMapping("/signString")
+
     /**
      *
      * This function takes a string as an returns the signature on the string along with the signature details
@@ -146,51 +146,62 @@ public class SignController {
      *  * api key: to be removed
      *  * dsc password
      */
-    public  ResponseEntity<String> signString(
-            @RequestBody StringSignModel requestModel,
-            HttpServletResponse response ) throws UnrecoverableKeyException, CertificateException, KeyStoreException, NoSuchAlgorithmException, IOException {
-        String plainText = requestModel.getPlainText();
-        Optional<String> password = Optional.ofNullable(requestModel.getPassword());
-
+    @PostMapping(value="/signString", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public  Map signString(@RequestBody Map<String, String> request)
+            throws UnrecoverableKeyException,
+                    CertificateException,
+                    KeyStoreException,
+                    NoSuchAlgorithmException,
+                    IOException {
+        String plainText = request.get("plainText");
+        String password = request.get("password");
         CreateStringSignatureBase signatureBase = new CreateStringSignatureBase();
         try {
             CMSSignedData sign = signatureBase.sign(plainText);
             String signerInfo = signatureBase.getSignerInfo(sign);
             String signData = signatureBase.cmsToBase64(sign);
-            // Set headers for the response
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-            String jsonResponse = "{ \"sign:"+signData+"}\"";
-            return  ResponseEntity.ok().headers(headers)
-                    .body(jsonResponse);
+            Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put("success", true);
+            responseMap.put("sign", signData);
+            responseMap.put("signerInfo", signerInfo);
+            return responseMap;
         } catch (Exception e){
             e.printStackTrace();
-            return  ResponseEntity.ok()
-                    .body("{sign: null pointer}");
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("success", "false");
+            errorResponse.put("error", e.getMessage());
+            return errorResponse;
         }
     }
-}
 
-class StringSignModel {
-    private String plainText;
-    private String password;
+    @PostMapping(value = "/sign/verify", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> verifySignature(@RequestBody Map<String, String> request) throws Exception {
+        if(!request.containsKey("signature")){
+            Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put("success", false);
+            responseMap.put("error", "signature cannot be empty");
+            return responseMap;
+        }
+        String signature = request.get("signature");
+        CreateStringSignatureBase signatureBase = new CreateStringSignatureBase();
+//        CMSSignedData cmsSignedData = signatureBase.getCmsFromBase64(signature);
+        try {
+            boolean isVerified = signatureBase.verifyString(signature);
 
-    // Getters and setters
-
-    public String getPlainText() {
-        return plainText;
-    }
-
-    public void setPlainText(String plainText) {
-        this.plainText = plainText;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+            Map<String, Object> responseMap = new HashMap<>();
+            Map<String, Object> dataMap = new HashMap<>();
+            responseMap.put("success", true);
+            dataMap.put("verified", isVerified);
+            responseMap.put("data", dataMap);
+            return responseMap;
+        } catch (Exception e){
+            e.printStackTrace();
+            Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put("success", false);
+            responseMap.put("error", e.getMessage());
+            return responseMap;
+        }
     }
 }

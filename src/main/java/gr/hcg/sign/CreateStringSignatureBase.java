@@ -27,6 +27,7 @@ import org.apache.logging.log4j.Logger;
 import org.bouncycastle.asn1.pkcs.RSAPublicKey;
 import org.bouncycastle.jce.provider.X509CertificateObject;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.DecoderException;
 import org.json.JSONException;
 
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
@@ -230,17 +231,25 @@ public class CreateStringSignatureBase
      * This method takes the cms data as base64 encoded string and then verifies the signature
      * @param cmsData
      * @return
+     * @throws
      */
-    public boolean verifyString(String cmsData) throws Exception {
+    public boolean verifyString(String cmsData) throws CMSException, CertificateException, IOException, OperatorCreationException {
+        CMSSignedData cmsSignedData;
         try {
-            CMSSignedData cmsSignedData = getCmsFromBase64(cmsData);
-            return verify(cmsSignedData);
+            cmsSignedData = getCmsFromBase64(cmsData);
+        } catch (CMSException e) {
+            logger.debug(e.getStackTrace());
+            throw e;
+        } catch (DecoderException e) {
+            logger.debug(e.getStackTrace());
+            throw new CMSException("unable to convert string to CMSSignedData");
+        } catch (Exception e) {
+            logger.debug(e.getStackTrace());
+            throw new CMSException("error in converting base64 to CMSSignedData");
         }
-        catch (Exception e){
-            logger.debug("unable to verify the signature");
-            logger.debug(e.toString());
-            return false;
-        }
+        logger.debug("Successfully created the CMSSignedData Object");
+        return verify(cmsSignedData);
+
     }
 
     public String get_signer_name() {
@@ -349,7 +358,10 @@ public class CreateStringSignatureBase
      * @throws CMSException
      */
     public CMSSignedData getCmsFromBase64(String base64String) throws CMSException {
+        logger.debug("the String is %s", base64String);
+        logger.debug(base64String);
         byte[] cmsSignedDataBytes = Base64.decode(base64String);
+        logger.debug("comverted string to cms bytes");
         ByteArrayInputStream bis = new ByteArrayInputStream(cmsSignedDataBytes);
         CMSSignedData signedData = new CMSSignedData(bis);
         return signedData;
@@ -377,7 +389,7 @@ public class CreateStringSignatureBase
      * @return
      * @throws CertificateParsingException
      */
-    public X509Certificate getFirstCertificate(CMSSignedData cmsSignedData) throws Exception {
+    public X509Certificate getFirstCertificate(CMSSignedData cmsSignedData) throws CertificateException, IOException {
         Collection<X509CertificateHolder> certificateHolders = cmsSignedData.getCertificates().getMatches(null);
         for (X509CertificateHolder certificateHolder : certificateHolders) {
 //            return new X509CertificateObject(certificateHolder.toASN1Structure());
@@ -393,7 +405,7 @@ public class CreateStringSignatureBase
         System.out.println("Format: " + publicKey.getFormat());
         System.out.println("key: " + bytesToHex(publicKey.getEncoded()));
     }
-    public boolean verify(CMSSignedData cmsSignedData) throws Exception {
+    public boolean verify(CMSSignedData cmsSignedData) throws CertificateException, IOException, OperatorCreationException {
         Iterator<SignerInformation> it = cmsSignedData.getSignerInfos().getSigners().iterator();
         boolean verified = true;
         while (it.hasNext()) {
@@ -419,7 +431,7 @@ public class CreateStringSignatureBase
         return verified;
 
     }
-    public static X509Certificate getCertificate(X509CertificateHolder certificateHolder) throws Exception {
+    public static X509Certificate getCertificate(X509CertificateHolder certificateHolder) throws IOException, CertificateException {
         byte[] encodedCertificate = certificateHolder.getEncoded();
 
         CertificateFactory factory = CertificateFactory.getInstance("X.509");
