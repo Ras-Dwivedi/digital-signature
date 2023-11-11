@@ -145,7 +145,7 @@ public class SignController {
                     IOException {
         String plainText = request.get("plainText");
         String password = request.get("password");
-        CreateStringSignatureBase signatureBase = new CreateStringSignatureBase();
+        CreateStringSignatureBase signatureBase = new CreateStringSignatureBase(password);
         try {
             CMSSignedData sign = signatureBase.sign(plainText);
             String signerInfo = signatureBase.getSignerName();

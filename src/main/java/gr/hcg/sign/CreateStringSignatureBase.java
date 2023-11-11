@@ -46,14 +46,22 @@ import javax.security.auth.x500.X500Principal;
 public class CreateStringSignatureBase
 {
     private static final String FILE_PATH = "./src/main/resources/application.properties";
+
     private static Properties properties;
     static {
+        InputStream inputStream = CreateStringSignatureBase.class.getClassLoader().getResourceAsStream("application.properties");
         properties = new Properties();
-        try (FileInputStream fis = new FileInputStream(FILE_PATH)) {
-            properties.load(fis);
-        } catch (IOException e) {
+        try {
+            properties.load(inputStream);
+        } catch (Exception e) {
             e.printStackTrace();
+
         }
+//        try (FileInputStream fis = new FileInputStream(FILE_PATH)) {
+//            properties.load(fis);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 //    public static String getPropertyValue(String key) {
 //        return properties.getProperty(key);
@@ -63,6 +71,10 @@ public class CreateStringSignatureBase
     private Certificate[] certificateChain;
     private String tsaUrl;
     private boolean externalSigning;
+    private KeyStore keyStore;
+    private char[] pin;
+    private Provider provider;
+    private boolean isDscDetected;
     private static final Logger logger = LogManager.getLogger(Signer.class);
 
     public Certificate[] getCertChain(KeyStore keystore, char[] pin) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
@@ -120,33 +132,11 @@ public class CreateStringSignatureBase
         // grabs the first alias from the keystore and get the private key. An
         // alternative method or constructor could be used for setting a specific
         // alias that should be used.
-        Enumeration<String> aliases = keystore.aliases();
-        String alias;
-        Certificate cert = null;
-        while (cert == null && aliases.hasMoreElements())
-        {
-            logger.debug("Alias detected");
-            alias = aliases.nextElement();
-            setPrivateKey((PrivateKey) keystore.getKey(alias, pin));
-            Certificate[] certChain = keystore.getCertificateChain(alias);
-            if (certChain != null)
-            {
-                setCertificateChain(certChain);
-                cert = certChain[0];
-                if (cert instanceof X509Certificate)
-                {
-                    // avoid expired certificate
-                    ((X509Certificate) cert).checkValidity();
-                    SigUtils.checkCertificateUsage((X509Certificate) cert);
-                }
-            }
-        }
-
-
-        if (cert == null)
-        {   System.out.println("found null certificate");
-            throw new IOException("Could not find certificate");
-        }
+        this.keyStore = keyStore;
+        this.pin = pin;
+        this.certificateChain = getCertChain(keystore,pin);
+        this.provider = null;
+        this.isDscDetected = false;
     }
 
     /**
@@ -158,20 +148,107 @@ public class CreateStringSignatureBase
      * @throws UnrecoverableKeyException
      */
     public CreateStringSignatureBase() throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
+     assignDefaultCertChain();
+    }
 
+    /**
+     * Constructor that signs using the DSC keys
+     * @param password
+     * @throws IOException
+     * @throws KeyStoreException
+     * @throws CertificateException
+     * @throws NoSuchAlgorithmException
+     * @throws UnrecoverableKeyException
+     */
+    public CreateStringSignatureBase(String password) throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
+        if (password.isEmpty()){
+            assignDefaultCertChain();
+            return;
+        }
+        if (!isDscDetected(password)){
+            assignDefaultCertChain();
+            return;
+        }
+        assignDscCertChain(password.toCharArray());
+    }
+
+
+    /**
+     * from the default pfx file, creates the certificate chain and assigns it to the class variable
+     * @throws KeyStoreException
+     * @throws CertificateException
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
+     * @throws UnrecoverableKeyException
+     */
+    public void assignDefaultCertChain() throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
         String keystoreName = properties.getProperty("signer.keystore.name");
         String keystorePin = properties.getProperty("signer.keystore.pin");
 
-        System.out.println(keystoreName);
         InputStream ksInputStream = new FileInputStream(keystoreName);
         KeyStore keystore = KeyStore.getInstance("PKCS12");
         char[] pin = keystorePin.toCharArray();
         keystore.load(ksInputStream, pin);
+        this.keyStore = keyStore;
+        this.pin = pin;
         this.certificateChain = getCertChain(keystore,pin);
-//        this(keystore,pin.clone());
+        this.provider = null;
+        this.isDscDetected = false;
+
+    }
+    public void assignDscCertChain(char[] pin) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
+        String configPath = "config.cfg";
+        Provider pkcs11Provider = Security.getProvider("SunPKCS11");
+        pkcs11Provider = pkcs11Provider.configure(configPath);
+        KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
+        pkcs11KeyStore.load(null, pin);
+        this.keyStore = pkcs11KeyStore;
+        this.pin = pin;
+        this.certificateChain = getCertChain(pkcs11KeyStore,pin);
+        this.provider = pkcs11Provider;
+        this.isDscDetected = true;
     }
 
+    /**
+     *
+     * Returns whether the DSC is detected or not
+     * @param password
+     * @return
+     */
+    public boolean isDscDetected(String password){
+        logger.debug("password is "+ password);
+        if (password.isEmpty()){
+            return false;
+        }
+        String configPath = "config.cfg";
+        Provider pkcs11Provider = Security.getProvider("SunPKCS11");
+        pkcs11Provider = pkcs11Provider.configure(configPath);
+        try {
+            KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
+            pkcs11KeyStore.load(null, password.toCharArray());
+            java.util.Enumeration<String> aliases = pkcs11KeyStore.aliases();
+            logger.debug("dected dsc fetching aliases");
+            int noAliases = 0;
+            List<String> aliasList = new ArrayList<>();
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                System.out.println("Alias: " + alias);
+                noAliases += 1;
+                aliasList.add(alias);
+            }
+            if (noAliases > 0) {
+                return true;
+            }
 
+            return false;
+        } catch (CertificateException e) {
+            return false;
+        } catch (IOException | KeyStoreException e) {
+            return false;
+        } catch (NoSuchAlgorithmException e) {
+            return false;
+        }
+    }
     /**
      * Sets the private key
      * Since the private key is not accessible in case of PKCS12, this should not be used there
@@ -220,14 +297,22 @@ public class CreateStringSignatureBase
 //    @Override
     public CMSSignedData sign(String msg) throws IOException
     {
-        // ToDO handle  the DSC operation here only
-        // cannot be done private (interface)
         try
         {
+
+            //
             CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
             X509Certificate cert = (X509Certificate) this.certificateChain[0];
-            getPublicKey(cert);
-            ContentSigner sha1Signer = new JcaContentSignerBuilder("SHA256WithRSA").build(privateKey);
+            JcaContentSignerBuilder contentSignerBuilder = new JcaContentSignerBuilder("SHA256WithRSA");
+            ContentSigner sha1Signer;
+            if(isDscDetected){
+                contentSignerBuilder.setProvider(this.provider);
+                sha1Signer = contentSignerBuilder.build(this.privateKey);
+
+            } else {
+                sha1Signer = contentSignerBuilder.build(this.privateKey);
+
+            }
             gen.addSignerInfoGenerator(new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build()).build(sha1Signer, cert));
             gen.addCertificates(new JcaCertStore(Arrays.asList(this.certificateChain)));
             CMSSignedData signedData = gen.generate(new CMSProcessableByteArray(msg.getBytes()), true);
@@ -238,6 +323,7 @@ public class CreateStringSignatureBase
             throw new IOException(e);
         }
     }
+
 
     /**
      * This method takes the cms data as base64 encoded string and then verifies the signature
@@ -296,21 +382,12 @@ public class CreateStringSignatureBase
             return null;
         }
     }
-//    public CMSProcessableInputStream stringToCMSProcessableInputStream(String inputString) {
-//        try {
-//            // Convert the String to an InputStream
-//            ByteArrayInputStream inputStream = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
-//
-//            // Wrap the InputStream with CMSProcessableInputStream
-//            CMSProcessableInputStream cmsInputStream = new CMSProcessableInputStream(inputStream);
-//
-//            return cmsInputStream;
-//        } catch (UnsupportedEncodingException e) {
-//            // Handle the exception, e.g., by throwing or logging it
-//            e.printStackTrace();
-//            return null;
-//        }
-//    }
+
+    /**
+     * Converts the bytes to hex string
+     * @param byteArray
+     * @return
+     */
     public String bytesToHex(byte[] byteArray) {
         StringBuilder hexString = new StringBuilder();
         for (byte b : byteArray) {
@@ -428,7 +505,6 @@ public class CreateStringSignatureBase
     public X509Certificate getFirstCertificate(CMSSignedData cmsSignedData) throws CertificateException, IOException {
         Collection<X509CertificateHolder> certificateHolders = cmsSignedData.getCertificates().getMatches(null);
         for (X509CertificateHolder certificateHolder : certificateHolders) {
-//            return new X509CertificateObject(certificateHolder.toASN1Structure());
             return getCertificate(certificateHolder);
         }
         return null;
@@ -462,7 +538,6 @@ public class CreateStringSignatureBase
         boolean verified = true;
         while (it.hasNext()) {
             SignerInformation signerInformation = it.next();
-//        SignerInformation signerInformation = cmsSignedData.getSignerInfos().getSigners().iterator().next();
             X509Certificate x509Certificate = getFirstCertificate(cmsSignedData);
             getPublicKey(x509Certificate);
 //        verify the certificate. Ideally you should get the certificate from somewhere else and then match it?
