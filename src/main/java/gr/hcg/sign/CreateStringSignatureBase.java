@@ -161,15 +161,16 @@ public class CreateStringSignatureBase
      * @throws UnrecoverableKeyException
      */
     public CreateStringSignatureBase(String password) throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        if (password.isEmpty()){
-            assignDefaultCertChain();
-            return;
-        }
-        if (!isDscDetected(password)){
-            assignDefaultCertChain();
-            return;
-        }
-        assignDscCertChain(password.toCharArray());
+//        if (password.isEmpty()){
+//            assignDefaultCertChain();
+//            return;
+//        }
+//        if (!isDscDetected(password)){
+//            assignDefaultCertChain();
+//            return;
+//        }
+//        assignDscCertChain(password.toCharArray());
+        assignDefaultCertChain();
     }
 
 
@@ -196,59 +197,59 @@ public class CreateStringSignatureBase
         this.isDscDetected = false;
 
     }
-    public void assignDscCertChain(char[] pin) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        String configPath = "config.cfg";
-        Provider pkcs11Provider = Security.getProvider("SunPKCS11");
-        pkcs11Provider = pkcs11Provider.configure(configPath);
-        KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
-        pkcs11KeyStore.load(null, pin);
-        this.keyStore = pkcs11KeyStore;
-        this.pin = pin;
-        this.certificateChain = getCertChain(pkcs11KeyStore,pin);
-        this.provider = pkcs11Provider;
-        this.isDscDetected = true;
-    }
+//    public void assignDscCertChain(char[] pin) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
+//        String configPath = "config.cfg";
+//        Provider pkcs11Provider = Security.getProvider("SunPKCS11");
+//        pkcs11Provider = pkcs11Provider.configure(configPath);
+//        KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
+//        pkcs11KeyStore.load(null, pin);
+//        this.keyStore = pkcs11KeyStore;
+//        this.pin = pin;
+//        this.certificateChain = getCertChain(pkcs11KeyStore,pin);
+//        this.provider = pkcs11Provider;
+//        this.isDscDetected = true;
+//    }
 
     /**
      *
      * Returns whether the DSC is detected or not
      * @param password
      * @return
-     */
-    public boolean isDscDetected(String password){
-        logger.debug("password is "+ password);
-        if (password.isEmpty()){
-            return false;
-        }
-        String configPath = "config.cfg";
-        Provider pkcs11Provider = Security.getProvider("SunPKCS11");
-        pkcs11Provider = pkcs11Provider.configure(configPath);
-        try {
-            KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
-            pkcs11KeyStore.load(null, password.toCharArray());
-            java.util.Enumeration<String> aliases = pkcs11KeyStore.aliases();
-            logger.debug("dected dsc fetching aliases");
-            int noAliases = 0;
-            List<String> aliasList = new ArrayList<>();
-            while (aliases.hasMoreElements()) {
-                String alias = aliases.nextElement();
-                System.out.println("Alias: " + alias);
-                noAliases += 1;
-                aliasList.add(alias);
-            }
-            if (noAliases > 0) {
-                return true;
-            }
-
-            return false;
-        } catch (CertificateException e) {
-            return false;
-        } catch (IOException | KeyStoreException e) {
-            return false;
-        } catch (NoSuchAlgorithmException e) {
-            return false;
-        }
-    }
+//     */
+//    public boolean isDscDetected(String password){
+//        logger.debug("password is "+ password);
+//        if (password.isEmpty()){
+//            return false;
+//        }
+//        String configPath = "config.cfg";
+//        Provider pkcs11Provider = Security.getProvider("SunPKCS11");
+//        pkcs11Provider = pkcs11Provider.configure(configPath);
+//        try {
+//            KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
+//            pkcs11KeyStore.load(null, password.toCharArray());
+//            java.util.Enumeration<String> aliases = pkcs11KeyStore.aliases();
+//            logger.debug("dected dsc fetching aliases");
+//            int noAliases = 0;
+//            List<String> aliasList = new ArrayList<>();
+//            while (aliases.hasMoreElements()) {
+//                String alias = aliases.nextElement();
+//                System.out.println("Alias: " + alias);
+//                noAliases += 1;
+//                aliasList.add(alias);
+//            }
+//            if (noAliases > 0) {
+//                return true;
+//            }
+//
+//            return false;
+//        } catch (CertificateException e) {
+//            return false;
+//        } catch (IOException | KeyStoreException e) {
+//            return false;
+//        } catch (NoSuchAlgorithmException e) {
+//            return false;
+//        }
+//    }
     /**
      * Sets the private key
      * Since the private key is not accessible in case of PKCS12, this should not be used there
@@ -305,14 +306,15 @@ public class CreateStringSignatureBase
             X509Certificate cert = (X509Certificate) this.certificateChain[0];
             JcaContentSignerBuilder contentSignerBuilder = new JcaContentSignerBuilder("SHA256WithRSA");
             ContentSigner sha1Signer;
-            if(isDscDetected){
-                contentSignerBuilder.setProvider(this.provider);
-                sha1Signer = contentSignerBuilder.build(this.privateKey);
-
-            } else {
-                sha1Signer = contentSignerBuilder.build(this.privateKey);
-
-            }
+//            if(isDscDetected){
+//                contentSignerBuilder.setProvider(this.provider);
+//                sha1Signer = contentSignerBuilder.build(this.privateKey);
+//
+//            } else {
+//                sha1Signer = contentSignerBuilder.build(this.privateKey);
+//
+//            }
+            sha1Signer = contentSignerBuilder.build(this.privateKey);
             gen.addSignerInfoGenerator(new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build()).build(sha1Signer, cert));
             gen.addCertificates(new JcaCertStore(Arrays.asList(this.certificateChain)));
             CMSSignedData signedData = gen.generate(new CMSProcessableByteArray(msg.getBytes()), true);
