@@ -77,7 +77,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
     public String visibleLine2 = "From Kanpur Development Authority";
     public String uuid = UUID.randomUUID().toString();
 
-    
+
     private Calendar signDate = null;
 
     /**
@@ -158,9 +158,11 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
 
             if (rect == null)
             {
-                float width = doc.getPage(0).getMediaBox().getWidth();
-                float height = doc.getPage(0).getMediaBox().getHeight();
-                Rectangle2D humanRect = new Rectangle2D.Float(2*width/3, height/3-40, width/5, 100);
+                int lastPageIndex = doc.getNumberOfPages() - 1;
+                System.out.println("no of pages are "+ doc.getNumberOfPages());
+                float width = doc.getPage(lastPageIndex).getMediaBox().getWidth();
+                float height = doc.getPage(lastPageIndex).getMediaBox().getHeight();
+                Rectangle2D humanRect = new Rectangle2D.Float(3*width/5, height/3-40, width/4, 100);
                 rect = createSignatureRectangle(doc, humanRect);
             }
 
@@ -210,10 +212,11 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
             SignatureInterface signatureInterface = isExternalSigning() ? null : this;
 
             // register signature dictionary and sign interface
+            int lastPageIndex = doc.getNumberOfPages() - 1;
             signatureOptions = new SignatureOptions();
             signatureOptions.setPreferredSignatureSize(8192*2);
-            signatureOptions.setVisualSignature(createVisualSignatureTemplate(doc, 0, rect));
-            signatureOptions.setPage(0);
+            signatureOptions.setVisualSignature(createVisualSignatureTemplate(doc, lastPageIndex, rect));
+            signatureOptions.setPage(lastPageIndex);
             doc.addSignature(signature, signatureInterface, signatureOptions);
 
             // write incremental (only for signing purpose)
@@ -423,14 +426,12 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
 
 
     private static void addRightPart(PDPageContentStream cs, PDFont font, float w, float h, Calendar signDate, String visibleLine1, String visibleLine2) throws IOException {
-        float fontSize = 9f;
+        float fontSize = 15f;
         cs.setFont(font, fontSize);
-        // showTextRight(cs, font, "Υπογραφή από:", w, h-40, fontSize);
         showTextRight(cs, font, visibleLine1, w, h-50, fontSize);
-        showTextRight(cs, font, visibleLine2, w, h-60, fontSize);
-        // showTextRight(cs, font, "Ημερομηνία υπογραφής:", w, h-70, fontSize);
+        showTextRight(cs, font, visibleLine2, w, h-70, fontSize);
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        showTextRight(cs, font, sdf.format(signDate.getTime()), w, h-80, fontSize);
+        showTextRight(cs, font, sdf.format(signDate.getTime()), w, h-90, fontSize);
     }
 
     private static void showTextRight(PDPageContentStream cs, PDFont font, String text, float w, float y, float fontSize ) throws IOException {
