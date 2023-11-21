@@ -158,8 +158,10 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
 
             if (rect == null)
             {
-                float width = doc.getPage(0).getMediaBox().getWidth();
-                float height = doc.getPage(0).getMediaBox().getHeight();
+                int lastPageIndex = doc.getNumberOfPages() - 1;
+                System.out.println("no of pages are "+ doc.getNumberOfPages());
+                float width = doc.getPage(lastPageIndex).getMediaBox().getWidth();
+                float height = doc.getPage(lastPageIndex).getMediaBox().getHeight();
                 Rectangle2D humanRect = new Rectangle2D.Float(2*width/3, height/3-40, width/5, 100);
                 rect = createSignatureRectangle(doc, humanRect);
             }
@@ -210,10 +212,11 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
             SignatureInterface signatureInterface = isExternalSigning() ? null : this;
 
             // register signature dictionary and sign interface
+            int lastPageIndex = doc.getNumberOfPages() - 1;
             signatureOptions = new SignatureOptions();
             signatureOptions.setPreferredSignatureSize(8192*2);
-            signatureOptions.setVisualSignature(createVisualSignatureTemplate(doc, 0, rect));
-            signatureOptions.setPage(0);
+            signatureOptions.setVisualSignature(createVisualSignatureTemplate(doc, lastPageIndex, rect));
+            signatureOptions.setPage(lastPageIndex);
             doc.addSignature(signature, signatureInterface, signatureOptions);
 
             // write incremental (only for signing purpose)
