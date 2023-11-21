@@ -97,11 +97,7 @@ public class SignController {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             Calendar signDate;
-            if(password.isPresent()){
-                signDate=signer.sign(file.getInputStream(), bos, password.orElse(""));
-            } else {
-                signDate=signer.sign(file.getInputStream(), bos);
-            }
+            signDate=signer.sign(file.getInputStream(), bos);
 
             // Get the signed PDF bytes
             byte[] signedPdfBytes = bos.toByteArray();
