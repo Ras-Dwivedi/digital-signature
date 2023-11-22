@@ -162,7 +162,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
                 System.out.println("no of pages are "+ doc.getNumberOfPages());
                 float width = doc.getPage(lastPageIndex).getMediaBox().getWidth();
                 float height = doc.getPage(lastPageIndex).getMediaBox().getHeight();
-                Rectangle2D humanRect = new Rectangle2D.Float(3*width/5, height/3-40, width/4, 100);
+                Rectangle2D humanRect = new Rectangle2D.Float(3*width/5, height/7, width/4, 100);
                 rect = createSignatureRectangle(doc, humanRect);
             }
 
