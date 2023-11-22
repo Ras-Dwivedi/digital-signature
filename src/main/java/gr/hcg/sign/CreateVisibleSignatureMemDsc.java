@@ -165,7 +165,7 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
                 System.out.println("no of pages are "+ doc.getNumberOfPages());
                 float width = doc.getPage(lastPageIndex).getMediaBox().getWidth();
                 float height = doc.getPage(lastPageIndex).getMediaBox().getHeight();
-                Rectangle2D humanRect = new Rectangle2D.Float(3*width/5, height/3-40, width/4, 100);
+                Rectangle2D humanRect = new Rectangle2D.Float(3*width/5, height/6, width/4, 100);
                 rect = createSignatureRectangle(doc, humanRect);
             }
 
@@ -375,19 +375,19 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
     private static void addHeader(PDPageContentStream cs, float w, float h, PDFont font) throws IOException {
         cs.setNonStrokingColor(Color.BLACK);
 
-        cs.addRect(10, h-8, w/3+10, 5);
+        //cs.addRect(10, h-8, w/3+10, 5);
         cs.fill();
 
         float fontSize = 13;
 
         cs.beginText();
         cs.setFont(font, fontSize);
-        cs.setNonStrokingColor(Color.black);
+        // cs.setNonStrokingColor(Color.black);
 
         cs.newLineAtOffset(w/3 + 80, h-8);
         cs.showText("Signature");
         cs.endText();
-        cs.addRect(2*w/3-120, h-8, w/3+100, 5);
+        // cs.addRect(2*w/3-120, h-8, w/3+100, 5);
         cs.fill();
     }
 
@@ -395,7 +395,7 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
 
         cs.beginText();
         cs.newLineAtOffset(w/2 - 30, 20);
-        cs.showText("page" + srcDoc.getNumberOfPages());
+        // cs.showText("page" + srcDoc.getNumberOfPages());
         cs.endText();
     }
 
