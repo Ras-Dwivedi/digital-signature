@@ -13,3 +13,5 @@ Generally there would be two major providers,
 This is the signed data that contains the message, the public key and the certfificates of the signer. Each message can be signed by more than one entity and the signer would have all the objects related the to the signature.
 
 
+### About .p12 file
+.p12 file are the files that stores the certificates as well as the private key. Ideally they should be locked by the password. To generate the .p12 file

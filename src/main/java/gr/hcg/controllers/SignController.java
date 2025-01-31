@@ -26,6 +26,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.*;
+import java.io.ByteArrayInputStream;
+import org.springframework.web.bind.annotation.RequestBody;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Controller
 public class SignController {
@@ -188,5 +191,127 @@ public class SignController {
             responseMap.put("error", e.getMessage());
             return responseMap;
         }
+    }
+//
+    @PostMapping("/signBase64")
+    public ResponseEntity<byte[]> signPdfBase64(Model model,
+                                                @RequestParam(value = "base64File") String base64File,
+                                                @RequestParam(value = "apikey") String apikey,
+                                                @RequestParam(value = "password") Optional<String> password,
+                                                HttpServletResponse response) {
+
+        Optional<Boolean> json = Optional.of(true);
+        model.addAttribute("uuid", null);
+        model.addAttribute("path", null);
+
+        if (base64File == null || base64File.isEmpty()) {
+            model.addAttribute("message", "Empty file input");
+            model.addAttribute("error", true);
+            return respondHtmlOrJson(json, model, response);
+        }
+
+        if (!apikey.equals(signerapikey)) {
+            model.addAttribute("message", "Wrong API key");
+            model.addAttribute("error", true);
+            return respondHtmlOrJson(json, model, response);
+        }
+
+        try {
+            // Decode Base64 to byte array
+            byte[] decodedPdfBytes = Base64.getDecoder().decode(base64File);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(decodedPdfBytes);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+            // Sign the PDF
+            Calendar signDate = signer.sign(inputStream, bos);
+
+            // Convert signed PDF bytes to Base64
+            byte[] signedPdfBytes = bos.toByteArray();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "signed_document.pdf");
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+            // Return the signed PDF in the response
+            return new ResponseEntity<>(signedPdfBytes, headers, HttpStatus.OK);
+
+        } catch (IOException | KeyStoreException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | IllegalStateException e) {
+            model.addAttribute("error", true);
+            model.addAttribute("message", "Error: " + e.getMessage());
+            e.printStackTrace();
+            return respondHtmlOrJson(json, model, response);
+        }
+    }
+
+    @PostMapping("/signBase64Json")
+    public ResponseEntity<byte[]> signPdfBase64Json(Model model,
+                                                    @RequestBody SignPdfRequest request,
+                                                    HttpServletResponse response) {
+
+        Optional<Boolean> json = Optional.of(true);
+        model.addAttribute("uuid", null);
+        model.addAttribute("path", null);
+
+        if (request.getBase64File() == null || request.getBase64File().isEmpty()) {
+            model.addAttribute("message", "Empty file input");
+            model.addAttribute("error", true);
+            return respondHtmlOrJson(json, model, response);
+        }
+
+        if (!request.getApikey().equals(signerapikey)) {
+            model.addAttribute("message", "Wrong API key");
+            model.addAttribute("error", true);
+            return respondHtmlOrJson(json, model, response);
+        }
+
+        try {
+            // Decode Base64 to byte array
+            byte[] decodedPdfBytes = Base64.getDecoder().decode(request.getBase64File());
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(decodedPdfBytes);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+            // Sign the PDF
+            Calendar signDate = signer.sign(inputStream, bos);
+
+            // Convert signed PDF bytes to Base64
+            byte[] signedPdfBytes = bos.toByteArray();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "signed_document.pdf");
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+            // Return the signed PDF in the response
+            return new ResponseEntity<>(signedPdfBytes, headers, HttpStatus.OK);
+
+        } catch (IOException | KeyStoreException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | IllegalStateException e) {
+            model.addAttribute("error", true);
+            model.addAttribute("message", "Error: " + e.getMessage());
+            e.printStackTrace();
+            return respondHtmlOrJson(json, model, response);
+        }
+    }
+}
+
+// DTO for handling JSON input
+class SignPdfRequest {
+    @JsonProperty("base64File")
+    private String base64File;
+
+    @JsonProperty("apikey")
+    private String apikey;
+
+    @JsonProperty("password")
+    private String password;
+
+    public String getBase64File() {
+        return base64File;
+    }
+
+    public String getApikey() {
+        return apikey;
+    }
+
+    public String getPassword() {
+        return password;
     }
 }
