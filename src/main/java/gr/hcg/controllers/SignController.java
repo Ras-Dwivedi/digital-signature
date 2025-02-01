@@ -290,6 +290,42 @@ public class SignController {
             return respondHtmlOrJson(json, model, response);
         }
     }
+    /**
+     *
+     * This function takes a string as an returns the signature on the string along with the signature details
+     * params
+     *  * string
+     *  * api key: to be removed
+     *  * dsc password
+     */
+    @PostMapping(value="/getPublicKey", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public  Map getPublicKey(@RequestBody Map<String, String> request)
+            throws UnrecoverableKeyException,
+            CertificateException,
+            KeyStoreException,
+            NoSuchAlgorithmException,
+            IOException {
+//        String plainText = request.get("plainText");
+        String password = request.get("password");
+        CreateStringSignatureBase signatureBase = new CreateStringSignatureBase(password);
+        try {
+            String publicKey = signatureBase.getPublicKeyInPEM();
+//            CMSSignedData sign = signatureBase.sign(plainText);
+//            String signerInfo = signatureBase.getSignerName();
+//            String signData = signatureBase.cmsToBase64(sign);
+            Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put("success", true);
+            responseMap.put("publicKey", publicKey);
+            return responseMap;
+        } catch (Exception e){
+            e.printStackTrace();
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("success", "false");
+            errorResponse.put("error", e.getMessage());
+            return errorResponse;
+        }
+    }
 }
 
 // DTO for handling JSON input

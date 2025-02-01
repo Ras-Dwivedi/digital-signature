@@ -42,6 +42,7 @@ import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import java.util.Properties;
 
 import javax.security.auth.x500.X500Principal;
+
 //@Component
 public class CreateStringSignatureBase
 {
@@ -524,6 +525,83 @@ public class CreateStringSignatureBase
         System.out.println("Format: " + publicKey.getFormat());
         System.out.println("key: " + bytesToHex(publicKey.getEncoded()));
     }
+
+    /**
+     * Retrieves the public key from the first certificate in the certificate chain and returns it in PEM format.
+     *
+     * This method assumes that the certificate chain is available and that the first certificate contains the public key.
+     *
+     * @return The public key in PEM format.
+     * @throws Exception If there is an error retrieving or processing the certificate.
+     */
+    public String getPublicKeyInPEM() throws Exception {
+        // Retrieve the first certificate from the certificate chain
+        Certificate certificate = this.certificateChain[0];
+        X509Certificate cert = (X509Certificate) certificate;
+
+        // Return the public key in PEM format by calling the helper method
+        return getPublicKeyInPEM(cert);
+    }
+
+    /**
+     * Converts the given X509Certificate's public key into PEM format.
+     *
+     * This method extracts the certificate's encoded data, base64 encodes it, and wraps it with the standard PEM
+     * format headers and footers (`-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----`).
+     *
+     * @param cert The X509Certificate whose public key will be converted to PEM format.
+     * @return A string containing the public key in PEM format.
+     * @throws Exception If there is an error processing the certificate or encoding the data.
+     */
+    public static String getPublicKeyInPEM(X509Certificate cert) throws Exception {
+        PublicKey publicKey = cert.getPublicKey();
+
+        // Get the encoded form of the public key (X.509 encoded format)
+        byte[] encodedPublicKey = publicKey.getEncoded();
+
+        // Base64 encode the public key bytes using BouncyCastle's Base64 utility
+        String base64EncodedPublicKey = Base64.toBase64String(encodedPublicKey);
+
+        // Add PEM header and footer to the Base64-encoded public key
+        String pemFormattedPublicKey = "-----BEGIN PUBLIC KEY-----\n"
+                + base64EncodedPublicKey // Insert line breaks every 64 characters
+                + "\n-----END PUBLIC KEY-----";
+
+        return pemFormattedPublicKey;
+//        // Get the encoded certificate bytes
+//        byte[] encodedCert = cert.getEncoded();
+//
+//        // Base64 encode the certificate bytes using BouncyCastle's Base64 utility
+//        String base64Encoded = Base64.toBase64String(encodedCert);
+//
+//        // Add PEM header and footer to the Base64-encoded string
+//        String pemFormattedCert = "-----BEGIN CERTIFICATE-----"
+//                + base64Encoded
+//                + "-----END CERTIFICATE-----";
+//
+//        return pemFormattedCert;
+    }
+//
+//    /**
+//     * Inserts line breaks into a Base64 encoded string to make it compatible with the PEM format.
+//     *
+//     * This method splits the Base64 encoded string into lines of 64 characters, which is the standard for PEM format.
+//     * It helps in formatting the encoded string so that it conforms to the PEM specification for certificates.
+//     *
+//     * @param base64Encoded The Base64 encoded string that needs to be split into lines.
+//     * @return A string with line breaks inserted every 64 characters.
+//     */
+//    private static String insertLineBreaks(String base64Encoded) {
+//        StringBuilder sb = new StringBuilder();
+//        int lineLength = 64; // Base64 encoding should have 64 characters per line
+//
+//        // Iterate through the Base64 string and insert line breaks
+//        for (int i = 0; i < base64Encoded.length(); i += lineLength) {
+//            sb.append(base64Encoded, i, Math.min(i + lineLength, base64Encoded.length()));
+//            sb.append("\n");
+//        }
+//        return sb.toString();
+//    }
 
     /**
      * Verifies whether the CMS signed data is correct or not
