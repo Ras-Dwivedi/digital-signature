@@ -218,20 +218,36 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
             aliasList.add(alias);
         }
         System.out.println("Total number of alias are: " + noAliases);
-        String firstAlias = aliasList.isEmpty() ? null : aliasList.get(0);
+        // Iterate through aliasList to find a valid alias with a non-null private key
+        String selectedAlias = null;
+        PrivateKey privateKey = null;
 
-        if (firstAlias != null) {
+        for (String alias : aliasList) {
+            try {
+                // Get the private key for the alias
+                privateKey = (PrivateKey) pkcs11KeyStore.getKey(alias, password);
 
-            X509Certificate cert = (X509Certificate) pkcs11KeyStore.getCertificate(firstAlias);
-            logger.debug(cert.toString());
-            PrivateKey privateKey = (PrivateKey) pkcs11KeyStore.getKey(firstAlias, password);
+                if (privateKey != null) {
+                    // If the private key is non-null, select this alias and break the loop
+                    selectedAlias = alias;
+                    break;
+                }
+            } catch (Exception e) {
+                // Handle exceptions for each alias (e.g., private key not accessible)
+                logger.debug("Unable to retrieve private key for alias: " + alias, e);
+            }
+        }
 
-            // Create a CMSSignedDataGenerator and build the signature
+        if (selectedAlias != null && privateKey != null) {
+            // Fetch the certificate associated with the selected alias
+            X509Certificate cert = (X509Certificate) pkcs11KeyStore.getCertificate(selectedAlias);
+            logger.debug("Using certificate: " + cert.toString());
+
+            // Create the CMSSignedDataGenerator and build the signature
             CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
             JcaContentSignerBuilder contentSignerBuilder = new JcaContentSignerBuilder("SHA256WithRSA");
             contentSignerBuilder.setProvider(pkcs11Provider);
             ContentSigner sha1Signer = contentSignerBuilder.build(privateKey);
-
 
             gen.addSignerInfoGenerator(new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build()).build(sha1Signer, cert));
             gen.addCertificates(new JcaCertStore(Arrays.asList(cert)));
@@ -242,15 +258,13 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
             // Generate the signed data
             CMSSignedData signedData = gen.generate(msg, false);
 
-            // Now you have the CMSSignedData object
+            // Return the signed data
             return signedData;
-
-
+        } else {
+            System.out.println("No valid alias with a non-null private key found.");
+            throw new SignatureException("Unable to sign - No valid alias found with private key");
         }
-        else {
-            System.out.println("No aliases found in the PKCS11 KeyStore.");
-            throw new SignatureException("Unable to sign");
-        }
+
     }
 
     public String get_signer_name() {

@@ -101,10 +101,23 @@ public class Signer {
             logger.info("No password provided, signing with pfx file");
             return sign(is, os);
         }
-        if (! isDscInserted(password)){
+        boolean dscInsertedStatus = false;
+        try {
+            logger.info("Checking if DSC is inserted");
+//            logger.info("password is "+ password);
+            dscInsertedStatus = isDscInserted(password);
+            logger.debug("dscInsertedStatus is "+ dscInsertedStatus);
+        } catch (Exception e) {
+            logger.error("Error in fetching DSC status");
+            e.printStackTrace();
+            logger.info("DSC is not detected, signing with pfx file");
+        }
+        if (!dscInsertedStatus){
             logger.info("No DSC detected, signing with pfx file");
             return sign(is, os);
         }
+        // Case of dsc based signature, change the code here
+        logger.debug("DSC is detected, signing with dsc");
         // Case of dsc based signature, change the code here
         InputStream ksInputStream = new FileInputStream(keystoreName);
 
