@@ -77,19 +77,52 @@ public class CreateStringSignatureBase
     private boolean isDscDetected;
     private static final Logger logger = LogManager.getLogger(Signer.class);
 
+//    public Certificate[] getCertChain(KeyStore keystore, char[] pin) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
+//        Enumeration<String> aliases = keystore.aliases();
+//        String alias;
+//        Certificate cert = null;
+//        while (cert == null && aliases.hasMoreElements()) {
+//            alias = aliases.nextElement();
+//            setPrivateKey((PrivateKey) keystore.getKey(alias, pin));
+//            Certificate[] certChain = keystore.getCertificateChain(alias);
+//            if(!(checkValidity(certChain)) ){
+//                System.out.println("Invalid cert chain");
+//            }
+//            return certChain;
+//        }
+//        return new Certificate[0];
+//    }
+
     public Certificate[] getCertChain(KeyStore keystore, char[] pin) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
         Enumeration<String> aliases = keystore.aliases();
         String alias;
-        Certificate cert = null;
-        while (cert == null && aliases.hasMoreElements()) {
+
+        // Iterate over aliases to find one with a non-null private key
+        while (aliases.hasMoreElements()) {
             alias = aliases.nextElement();
-            setPrivateKey((PrivateKey) keystore.getKey(alias, pin));
-            Certificate[] certChain = keystore.getCertificateChain(alias);
-            if(!(checkValidity(certChain)) ){
-                System.out.println("Invalid cert chain");
+
+            // Get the private key for the alias
+            PrivateKey privateKey = (PrivateKey) keystore.getKey(alias, pin);
+
+            // Check if private key is not null
+            if (privateKey != null) {
+                // Set the private key if needed (assuming you have a method for this)
+                setPrivateKey(privateKey);
+
+                // Get the certificate chain
+                Certificate[] certChain = keystore.getCertificateChain(alias);
+
+                // Check if the cert chain is valid
+                if (checkValidity(certChain)) {
+                    // Return the valid cert chain for the alias with non-null private key
+                    return certChain;
+                } else {
+                    System.out.println("Invalid cert chain for alias: " + alias);
+                }
             }
-            return certChain;
         }
+
+        // Return an empty array if no valid cert chain was found
         return new Certificate[0];
     }
 
@@ -571,4 +604,73 @@ public class CreateStringSignatureBase
 
         return certificate;
     }
-}
+
+
+    public String getPublicKeyInPEM() throws Exception {
+
+        // Retrieve the first certificate from the certificate chain
+        System.out.println("Certificate chain length: " + this.certificateChain.length);
+        Certificate certificate = this.certificateChain[0];
+
+        X509Certificate cert = (X509Certificate) certificate;
+
+
+
+        // Return the public key in PEM format by calling the helper method
+
+        return getPublicKeyInPEM(cert);
+
+    }
+
+
+
+    /**
+
+     * Converts the given X509Certificate's public key into PEM format.
+
+     *
+
+     * This method extracts the certificate's encoded data, base64 encodes it, and wraps it with the standard PEM
+
+     * format headers and footers (`-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----`).
+
+     *
+
+     * @param cert The X509Certificate whose public key will be converted to PEM format.
+
+     * @return A string containing the public key in PEM format.
+
+     * @throws Exception If there is an error processing the certificate or encoding the data.
+
+     */
+
+    public static String getPublicKeyInPEM(X509Certificate cert) throws Exception {
+
+        PublicKey publicKey = cert.getPublicKey();
+
+
+        // Get the encoded form of the public key (X.509 encoded format)
+
+        byte[] encodedPublicKey = publicKey.getEncoded();
+
+
+        // Base64 encode the public key bytes using BouncyCastle's Base64 utility
+
+        String base64EncodedPublicKey = Base64.toBase64String(encodedPublicKey);
+
+
+        // Add PEM header and footer to the Base64-encoded public key
+
+        String pemFormattedPublicKey = "-----BEGIN PUBLIC KEY-----\n"
+
+                + base64EncodedPublicKey // Insert line breaks every 64 characters
+
+                + "\n-----END PUBLIC KEY-----";
+
+
+        return pemFormattedPublicKey;
+    }
+
+
+
+ }
