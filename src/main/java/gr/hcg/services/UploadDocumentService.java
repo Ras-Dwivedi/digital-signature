@@ -25,8 +25,8 @@ public class UploadDocumentService {
                 folder
 
         };
-        String path = MessageFormat.format("{0}/{1}/{2}/{3}/", params);
-        new File(path).mkdirs();
+        String path = MessageFormat.format ("{0}/{1}/{2}/{3}/", params);
+        new File(path).mkdirs(); //:-// Make sure the directory exists
 
         params = new String[]{
                 uploadDir,

@@ -35,6 +35,25 @@ public class Runner implements CommandLineRunner {
         File signedDocumentFile = new File(documentFile.getParent(), substring + "_signed.pdf");
         FileInputStream fis = new FileInputStream(documentFile);
         FileOutputStream fos = new FileOutputStream(signedDocumentFile);
-        signer.sign(fis, fos);
+
+     int pageNumber = 0;
+        float x=0;
+        float y=0;
+
+        try {
+            if (args.length > 0) {
+                pageNumber = Integer.parseInt(args[0]);
+            }
+            if (args.length > 2) {
+                x = Integer.parseInt(args[1]);
+                y = Integer.parseInt(args[2]);
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input argument(s), using default values.");
+        }
+
+        System.out.printf("Signing on page: %d at position (x=%d, y=%d)%n", pageNumber, x, y);
+        signer.sign(fis, fos, pageNumber, x, y);
+   
     }
 }

@@ -56,8 +56,6 @@ import java.util.*;
 
 import java.io.ByteArrayInputStream;
 
-import org.springframework.web.bind.annotation.RequestBody;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 
@@ -160,6 +158,12 @@ public class SignController {
 
                                                     @RequestParam(value = "password") Optional<String> password,
 
+                                                    @RequestParam(value = "pageNumber") int pageNumber, //:-
+
+                                                     @RequestParam(value = "x") float x,
+
+                                                     @RequestParam(value = "y") float y,
+
                                                     HttpServletResponse response ) {
 
 
@@ -206,11 +210,11 @@ public class SignController {
 
             if(password.isPresent()){
 
-                signDate=signer.sign(file.getInputStream(), bos, password.orElse(""));
+                signDate=signer.sign(file.getInputStream(), bos, password.orElse(""), pageNumber - 1, x, y);//:-pageNumber - 1
 
             } else {
 
-                signDate=signer.sign(file.getInputStream(), bos);
+                signDate=signer.sign(file.getInputStream(), bos, pageNumber - 1, x, y);//pageNumber - 1
 
             }
 
@@ -404,6 +408,13 @@ public class SignController {
 
                                                 @RequestParam(value = "password") Optional<String> password,
 
+                                                @RequestParam(value = "pageNumber") int pageNumber,
+
+                                                @RequestParam("x") float x,
+    
+                                                @RequestParam("y") float y,
+
+
                                                 HttpServletResponse response) {
 
 
@@ -456,14 +467,14 @@ public class SignController {
             // Sign the PDF
 
 //            Calendar signDate = signer.sign(inputStream, bos);
-
+            // int lastPageIndex = pageNumber - 1;//:-
             if(password.isPresent()){
 
-                signDate=signer.sign(inputStream, bos, password.orElse(""));
+                signDate=signer.sign(inputStream, bos, password.orElse(""), pageNumber - 1, x, y);// here is the logic to sign a file
 
             } else {
 
-                signDate=signer.sign(inputStream, bos);
+                signDate=signer.sign(inputStream, bos, pageNumber - 1, x, y);//:-pageNumber - 1
 
             }
 
@@ -633,22 +644,27 @@ public class SignController {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
 
+            
 
             // Sign the PDF
 
             Calendar signDate;
             String password = request.getPassword();
+            int pageNumber = request.getPageNumber(); //:-  
+            float x = request.getX();
+            float y = request.getY();          
             System.out.println("password: " + password);
+            System.out.println("pageNumber: " + pageNumber);//:-
             if(!password.isEmpty()){
                 System.out.println("password: " + password);
                 System.out.println("password: is not empty");
 
-                signDate=signer.sign(inputStream, bos, password);
+                signDate=signer.sign(inputStream, bos, password, pageNumber - 1, x, y);//:-pageNumber - 1
 
             } else {
                 System.out.println("password: " + password);
                 System.out.println("password: is  empty");
-                signDate=signer.sign(inputStream, bos);
+                signDate=signer.sign(inputStream, bos, pageNumber - 1, x, y);//pageNumber - 1
 
             }
 
@@ -734,7 +750,7 @@ public class SignController {
 
             String publicKey = signatureBase.getPublicKeyInPEM();
 
-//            CMSSignedData sign = signatureBase.sign(plainText);
+      //    CMSSignedData sign = signatureBase.sign(plainText);
 
 //            String signerInfo = signatureBase.getSignerName();
 
@@ -787,7 +803,17 @@ class SignPdfRequest {
     @JsonProperty("password")
 
     private String password;
+    
 
+    @JsonProperty("pageNumber")//:-
+    private int pageNumber; //:-
+
+
+    @JsonProperty("x")
+    private float x;
+
+    @JsonProperty("y")
+    private float y;
 
 
     public String getBase64File() {
@@ -808,8 +834,23 @@ class SignPdfRequest {
 
     public String getPassword() {
 
-        return password;
+        return password; 
 
     }
 
+     public int getPageNumber() { //:- <-- Add this method
+        return pageNumber;
+    }
+
+    public void setPageNumber(int pageNumber) { //:-'' <-- Add this setter too
+        this.pageNumber = pageNumber;
+    }
+
+    public float getX() { return x; }
+    public void setX(float x) { this.x = x; }
+
+    public float getY() { return y; }
+    public void setY(float y) { this.y = y; }
+
+   
 }

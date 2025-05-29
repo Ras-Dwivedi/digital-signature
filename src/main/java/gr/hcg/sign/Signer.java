@@ -1,37 +1,37 @@
-package gr.hcg.sign;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+ package gr.hcg.sign;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import org.springframework.stereotype.Service;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.beans.factory.annotation.Value;
+ import org.springframework.stereotype.Component;
 
-import java.awt.geom.Rectangle2D;
-import java.io.*;
+ import java.awt.geom.Rectangle2D;
+ import java.io.*;
 import java.security.*;
-import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
+ import java.security.cert.CertificateException;
+ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.Calendar;
+ import java.util.List;
 
-@Component
-public class Signer {
-    private static final Logger logger = LogManager.getLogger(Signer.class);
+ @Component
+ public class Signer {
+     private static final Logger logger = LogManager.getLogger(Signer.class);
 
     @Value("${signer.keystore.pin}")
     public String keystorePin;
 
     @Value("${signer.keystore.name}")
-    public String keystoreName;
+     public String keystoreName;
 
-//    @Value("${signer.image.name}")
-//    public String imageName;
+ //    @Value("${signer.image.name}")
+ //    public String imageName;
 
     @Value("${signer.tsaurl}")
     public String tsaUrl;
 
-    public static byte[] readBytes(InputStream is ) throws IOException {
+     public static byte[] readBytes(InputStream is ) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
         int nRead;
@@ -55,114 +55,126 @@ public class Signer {
         }
         if(signReason!=null) {
             signing.signatureReason = signReason;
-        }
-        if(visibleLine1!=null) {
-            signing.visibleLine1 = visibleLine1;
-        }
-        if(visibleLine2!=null) {
-            signing.visibleLine2 = visibleLine2;
-        }
+       }
+       if(visibleLine1!=null) {
+           signing.visibleLine1 = visibleLine1;
+       }
+      if(visibleLine2!=null) {
+           signing.visibleLine2 = visibleLine2;
+       }
         if(uuid!=null) {
             signing.uuid = uuid;
         }
        
-    }
+     }
+ //:- added in public calendar sign(-----, int pageIndex)
+     public Calendar sign(InputStream is, OutputStream os, int pageIndex, float x, float y)  throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
+         logger.info("Default signing with pfx file" + pageIndex);//:- add pageIndex
+         InputStream ksInputStream = new FileInputStream(keystoreName);
 
-    public Calendar sign(InputStream is, OutputStream os) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        logger.info("Default signing with pfx file");
-        InputStream ksInputStream = new FileInputStream(keystoreName);
+         KeyStore keystore = KeyStore.getInstance("PKCS12");
+         char[] pin = keystorePin.toCharArray();
+         keystore.load(ksInputStream, pin);
 
-        KeyStore keystore = KeyStore.getInstance("PKCS12");
-        char[] pin = keystorePin.toCharArray();
-        keystore.load(ksInputStream, pin);
+         CreateVisibleSignatureMem signing = new CreateVisibleSignatureMem(keystore, pin.clone());
 
-        CreateVisibleSignatureMem signing = new CreateVisibleSignatureMem(keystore, pin.clone());
+ //        InputStream imageResource = new FileInputStream(imageName);
+ //        signing.setImageBytes(readBytes(imageResource));
 
-//        InputStream imageResource = new FileInputStream(imageName);
-//        signing.setImageBytes(readBytes(imageResource));
+         return signing.signPDF(is, os, tsaUrl, "Signature1", pageIndex, x, y);//:- lastPageIndex added
+         }
+         /**
+          * Calls Signing.signPdf to sign the pdf and returns the Calendar class
+          * @param is
+          * @param os
+          * @return
+          * @throws KeyStoreException
+          * @throws CertificateException
+          * @throws IOException
+          * @throws NoSuchAlgorithmException
+          * @throws UnrecoverableKeyException
+          */ 
+     public Calendar sign(InputStream is, OutputStream os, String password, int pageIndex, float x, float y) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
+         // This function should decide whether the dsc has been inserted or not and in case no, then it should use pfx for signing
+         if (password.isEmpty()){
+             // In case password is not specified, it has to be pfx signature
+             logger.info("No password provided, signing with pfx file");
+             return sign(is, os, pageIndex, x, y); //:- lastPageIndex
+         }
+         boolean dscInsertedStatus = false;
+         try {
+             logger.info("Checking if DSC is inserted");
+ //            logger.info("password is "+ password);
+             dscInsertedStatus = isDscInserted(password);
+             logger.debug("dscInsertedStatus is "+ dscInsertedStatus);
+         } catch (Exception e) {
+             logger.error("Error in fetching DSC status");
+             e.printStackTrace();
+             logger.info("DSC is not detected, signing with pfx file");
+         }
+         if (!dscInsertedStatus){
+             logger.info("No DSC detected, signing with pfx file");
+             // return sign(is, os, pageIndex, x, y); //:- pageIndex
+              try {//:-
+                 InputStream ksInputStream = new FileInputStream(keystoreName);//:-
+                 KeyStore keystore = KeyStore.getInstance("PKCS12");//:-
+                 char[] pin = password.toCharArray();//:-
+                 keystore.load(ksInputStream, pin); //:-❗ If wrong password → throws error
 
-        return signing.signPDF(is, os, tsaUrl, "Signature1");
-        }
-        /**
-         * Calls Signing.signPdf to sign the pdf and returns the Calendar class
-         * @param is
-         * @param os
-         * @return
-         * @throws KeyStoreException
-         * @throws CertificateException
-         * @throws IOException
-         * @throws NoSuchAlgorithmException
-         * @throws UnrecoverableKeyException
-         */
-    public Calendar sign(InputStream is, OutputStream os, String password) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        // This function should decide whether the dsc has been inserted or not and in case no, then it should use pfx for signing
-        if (password.isEmpty()){
-            // In case password is not specified, it has to be pfx signature
-            logger.info("No password provided, signing with pfx file");
-            return sign(is, os);
-        }
-        boolean dscInsertedStatus = false;
-        try {
-            logger.info("Checking if DSC is inserted");
-//            logger.info("password is "+ password);
-            dscInsertedStatus = isDscInserted(password);
-            logger.debug("dscInsertedStatus is "+ dscInsertedStatus);
-        } catch (Exception e) {
-            logger.error("Error in fetching DSC status");
-            e.printStackTrace();
-            logger.info("DSC is not detected, signing with pfx file");
-        }
-        if (!dscInsertedStatus){
-            logger.info("No DSC detected, signing with pfx file");
-            return sign(is, os);
-        }
-        // Case of dsc based signature, change the code here
-        logger.debug("DSC is detected, signing with dsc");
-        // Case of dsc based signature, change the code here
-        InputStream ksInputStream = new FileInputStream(keystoreName);
+                 CreateVisibleSignatureMem signing = new CreateVisibleSignatureMem(keystore, pin.clone());//:-
+                 return signing.signPDF(is, os, tsaUrl, "Signature1", pageIndex, x, y);//:-
 
-        CreateVisibleSignatureMemDsc signing = new CreateVisibleSignatureMemDsc(password.toCharArray());
+             } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException e) {//:-
+                 logger.error("Incorrect PFX password or failed to load keystore"); //:-
+                 throw new IllegalStateException("Incorrect password or PFX file", e); //:-⛔ Force error
+             }//:-
+         }//:-
+         // Case of dsc based signature, change the code here
+         logger.debug("DSC is detected, signing with dsc");
+         // Case of dsc based signature, change the code here
+         // InputStream ksInputStream = new FileInputStream(keystoreName);
 
-//        InputStream imageResource = new FileInputStream(imageName);
-//        signing.setImageBytes(readBytes(imageResource));
+         CreateVisibleSignatureMemDsc signing = new CreateVisibleSignatureMemDsc(password.toCharArray());
 
-        return signing.signPDF(is, os, tsaUrl, "Signature1");
+ //        InputStream imageResource = new FileInputStream(imageName);
+ //        signing.setImageBytes(readBytes(imageResource));
 
-    }
-    public boolean isDscInserted(String password){
-        logger.debug("password is "+ password);
-        if (password.isEmpty()){
+         return signing.signPDF(is, os, tsaUrl, "Signature1"); //:- check here 
+     }
+     public boolean isDscInserted(String password){
+         logger.debug("password is "+ password);
+         if (password.isEmpty()){
+             return false;
+         }
+         String configPath = "config.cfg";
+         Provider pkcs11Provider = Security.getProvider("SunPKCS11");
+         pkcs11Provider = pkcs11Provider.configure(configPath);
+         try {
+             KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
+             pkcs11KeyStore.load(null, password.toCharArray());
+             java.util.Enumeration<String> aliases = pkcs11KeyStore.aliases();
+             logger.debug("dected dsc fetching aliases");
+             int noAliases = 0;
+             List<String> aliasList = new ArrayList<>();
+             while (aliases.hasMoreElements()) {
+                 String alias = aliases.nextElement();
+                 System.out.println("Alias: " + alias);
+                 noAliases += 1;
+                 aliasList.add(alias);
+             }
+             if (noAliases > 0) {
+                 return true;
+             }
+
+             return false;
+         } catch (CertificateException e) {
+             return false;
+         } catch (IOException | KeyStoreException e) {
             return false;
-        }
-        String configPath = "config.cfg";
-        Provider pkcs11Provider = Security.getProvider("SunPKCS11");
-        pkcs11Provider = pkcs11Provider.configure(configPath);
-        try {
-            KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
-            pkcs11KeyStore.load(null, password.toCharArray());
-            java.util.Enumeration<String> aliases = pkcs11KeyStore.aliases();
-            logger.debug("dected dsc fetching aliases");
-            int noAliases = 0;
-            List<String> aliasList = new ArrayList<>();
-            while (aliases.hasMoreElements()) {
-                String alias = aliases.nextElement();
-                System.out.println("Alias: " + alias);
-                noAliases += 1;
-                aliasList.add(alias);
-            }
-            if (noAliases > 0) {
-                return true;
-            }
-
+         } catch (NoSuchAlgorithmException e) {
             return false;
-        } catch (CertificateException e) {
-            return false;
-        } catch (IOException | KeyStoreException e) {
-            return false;
-        } catch (NoSuchAlgorithmException e) {
-           return false;
-        }
-    }
+         }
+     }
 
 
-}
+ }

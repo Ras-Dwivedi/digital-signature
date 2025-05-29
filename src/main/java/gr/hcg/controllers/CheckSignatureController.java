@@ -33,12 +33,12 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 @Controller
-public class CheckSignatureController {
+public class CheckSignatureController { 
     Logger logger = Logger.getLogger(CheckSignatureController.class.getName());
 
     @Value("${check.config}")
     private String checkConfig;
-
+    
     @GetMapping("/")
     public ModelAndView home(Model model) {
         model.addAttribute("message", "Please upload a pdf file");
@@ -85,7 +85,7 @@ public class CheckSignatureController {
                     String res = handler.toString();
                     model.addAttribute("contents", res);
 
-                } catch (TikaException te) {
+                 } catch (TikaException te) {
                     te.printStackTrace();
                 } catch (SAXException e) {
                     throw new RuntimeException(e);

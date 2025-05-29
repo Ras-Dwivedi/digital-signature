@@ -119,7 +119,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
      * @param signatureFieldName optional name of an existing (unsigned) signature field
      * @throws IOException
      */
-    public Calendar signPDF(InputStream inputStream, OutputStream signedStream, String tsaUrl, String signatureFieldName) throws IOException
+    public Calendar signPDF(InputStream inputStream, OutputStream signedStream, String tsaUrl, String signatureFieldName, int pageIndex, float x, float y)  throws IOException
     {
         setTsaUrl(tsaUrl);
 
@@ -156,14 +156,37 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
                 signature = new PDSignature();
             }
 
+
+            if (pageIndex < 0 || pageIndex >= doc.getNumberOfPages()) {
+            throw new IllegalArgumentException("Invalid signature page index: " + pageIndex);
+        }
+
+
             if (rect == null)
             {
-                int lastPageIndex = doc.getNumberOfPages() - 1;
-                System.out.println("no of pages are "+ doc.getNumberOfPages());
-                float width = doc.getPage(lastPageIndex).getMediaBox().getWidth();
-                float height = doc.getPage(lastPageIndex).getMediaBox().getHeight();
-                Rectangle2D humanRect = new Rectangle2D.Float(3*width/5, height/6, width/4, 100);
-                rect = createSignatureRectangle(doc, humanRect);
+                // int lastPageIndex = doc.getNumberOfPages() - 1; //:-Example: If there are 5 pages, their indices are 0 to 4. So lastPageIndex = 5 - 1 = 4
+                // System.out.println("no of pages are "+ doc.getNumberOfPages());
+                // float width = doc.getPage(pageIndex).getMediaBox().getWidth();
+                // float height = doc.getPage(pageIndex).getMediaBox().getHeight();
+                
+                float width = doc.getPage(pageIndex).getMediaBox().getWidth();
+                float height = doc.getPage(pageIndex).getMediaBox().getHeight();
+
+
+
+              float boxWidth = 250;
+              float boxHeight = 100;
+
+             float adjustedX = Math.min(x, width - boxWidth);
+             float adjustedY = Math.max(0, y);
+             
+            Rectangle2D humanRect = new Rectangle2D.Float(adjustedX, adjustedY, boxWidth, boxHeight);
+
+                
+
+                // Rectangle2D humanRect = new Rectangle2D.Float(3*width/5, height/6, width/4, 100); //:- 
+
+                rect = createSignatureRectangle(doc, humanRect, pageIndex);
             }
 
             // Optional: certify
@@ -212,11 +235,12 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
             SignatureInterface signatureInterface = isExternalSigning() ? null : this;
 
             // register signature dictionary and sign interface
-            int lastPageIndex = doc.getNumberOfPages() - 1;
+            // int lastPageIndex = doc.getNumberOfPages() - 1;
+            //  int lastPageIndex = 0;
             signatureOptions = new SignatureOptions();
             signatureOptions.setPreferredSignatureSize(8192*2);
-            signatureOptions.setVisualSignature(createVisualSignatureTemplate(doc, lastPageIndex, rect));
-            signatureOptions.setPage(lastPageIndex);
+            signatureOptions.setVisualSignature(createVisualSignatureTemplate(doc, pageIndex, rect)); //:- lastPageIndex
+            signatureOptions.setPage(pageIndex); // :- needchangees for frontend
             doc.addSignature(signature, signatureInterface, signatureOptions);
 
             // write incremental (only for signing purpose)
@@ -233,13 +257,14 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
         return this.signDate;
     }
 
-    private PDRectangle createSignatureRectangle(PDDocument doc, Rectangle2D humanRect)
+    
+    private PDRectangle createSignatureRectangle(PDDocument doc, Rectangle2D humanRect, int pageIndex)
     {
         float x = (float) humanRect.getX();
         float y = (float) humanRect.getY();
         float width = (float) humanRect.getWidth();
         float height = (float) humanRect.getHeight();
-        PDPage page = doc.getPage(0);
+        PDPage page = doc.getPage(pageIndex); //0
         PDRectangle pageRect = page.getCropBox();
         PDRectangle rect = new PDRectangle();
         // signing should be at the same position regardless of page rotation.
@@ -273,6 +298,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
                 rect.setUpperRightY(y + height);
                 break;
         }
+    
         return rect;
     }
 
@@ -432,11 +458,13 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
         showTextRight(cs, font, visibleLine2, w, h-70, fontSize);
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         showTextRight(cs, font, sdf.format(signDate.getTime()), w, h-90, fontSize);
+        
     }
 
     private static void showTextRight(PDPageContentStream cs, PDFont font, String text, float w, float y, float fontSize ) throws IOException {
         cs.beginText();
-        float xoffset = w - font.getStringWidth(text) / 1000 * fontSize - 15;
+        // float xoffset = w - font.getStringWidth(text) / 1000 * fontSize - 15;
+        float xoffset = (w - (font.getStringWidth(text) / 1000 * fontSize)) / 2;
         cs.newLineAtOffset(xoffset, y);
         cs.setNonStrokingColor(Color.black);
         cs.showText(text);

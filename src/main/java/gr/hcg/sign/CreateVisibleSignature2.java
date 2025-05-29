@@ -136,7 +136,7 @@ public class CreateVisibleSignature2 extends CreateSignatureBase
             throw new IOException("Document for signing does not exist");
         }
 
-        setTsaUrl(tsaUrl);
+        setTsaUrl(tsaUrl); //:-Sets optional TSA (Timestamp Authority) URL for timestamping signature.
 
         // creating output document and prepare the IO streams.
         FileOutputStream fos = new FileOutputStream(signedFile);
@@ -540,7 +540,5 @@ public class CreateVisibleSignature2 extends CreateSignatureBase
                 "  -tsa <url>    sign timestamp using the given TSA server\n"+
                 "  -e            sign using external signature creation scenario");
     }
-
-
 
 }

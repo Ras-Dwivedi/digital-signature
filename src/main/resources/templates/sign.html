@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 <head>
     <style>
@@ -68,12 +68,15 @@
             font-size: 24px;
         }
     </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 </head>
 <body>
 <div class="container">
     <div class="logo">
         <img src="kda.png" alt="Logo" /> <!-- Replace "your-logo.png" with your logo file -->
-    </div>
+    <!-- </div>
     <h2>Document Signing Portal</h2>
     <form method="POST" action="/sign" enctype="multipart/form-data">
         <div class="form-group">
@@ -84,6 +87,239 @@
         <div class="form-group">
             <label for="file">Select a File</label>
             <input id="file" type="file" name="file" />
+        </div> -->
+
+        <!-- <div id="pdf-preview" style="overflow-y: auto; max-height: 500px; border: 1px solid #ccc; padding: 10px; margin-bottom: 20px;"> -->
+        <!-- PDF pages will be rendered here -->
+   <!---</div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" type="text" name="password" />
+        </div> -->
+
+        <!--  :- -->
+        <!-- <div class="form-group">
+    <label for="pageNumber">Page Number to Sign</label>
+    <input id="pageNumber" type="number" name="pageNumber" min="1" required />
+</div> -->
+<!-- Hidden input for selected page number
+<input id="pageNumber" type="hidden" name="pageNumber" required /> -->
+
+
+<!-- :- -->
+
+     <!--   <div class="form-group">
+            <input type="submit" value="Sign Document" />
+        </div>
+    </form>
+
+    <div class="pdf-preview" id="pdf-preview" style="overflow-y: auto; max-height: 500px; border: 1px solid #ccc; padding: 10px; margin-bottom: 20px;"> -->
+    <!-- PDF pages will be rendered here -->
+
+<!-- </div>
+
+
+<div class="footer">
+    Made with <span class="coffee-icon">☕</span> by C3iHub
+</div>
+
+
+
+<script>
+    const fileInput = document.getElementById('file');
+    const previewContainer = document.getElementById('pdf-preview');
+    const pageNumberInput = document.getElementById('pageNumber');
+
+    fileInput.addEventListener('change', async function () {
+        const file = fileInput.files[0];
+        if (!file || file.type !== 'application/pdf') return;
+
+        previewContainer.innerHTML = '';
+        const fileReader = new FileReader();
+
+        fileReader.onload = async function () {
+            const typedArray = new Uint8Array(this.result);
+            const pdf = await pdfjsLib.getDocument(typedArray).promise;
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 0.5 });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                canvas.style.border = '1px solid #ccc';
+                canvas.style.marginBottom = '10px';
+                canvas.style.cursor = 'pointer';
+
+                const context = canvas.getContext('2d');
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                canvas.addEventListener('click', () => {
+                    pageNumberInput.value = i;
+                    // Highlight selected page
+                    Array.from(previewContainer.querySelectorAll('canvas')).forEach(c => c.style.border = '1px solid #ccc');
+                    canvas.style.border = '2px solid green';
+                });
+
+                previewContainer.appendChild(canvas);
+            }
+        };
+
+        fileReader.readAsArrayBuffer(file);
+    });
+</script>
+
+
+</body>
+</html>  -->
+
+<!---------------------------------------------------------------------------------------------------------------------------->
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: row;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .form-container {
+            flex: 0 0 400px;
+            padding: 30px 20px;
+            background-color: #fff;
+            border-right: 2px solid #ccc;
+            overflow-y: auto;
+            transition: filter 0.3s ease;
+        }
+
+        .form-container.blurred {
+            filter: blur(3px);
+            pointer-events: none;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo img {
+            max-width: 100px;
+        }
+
+        .form-container h2 {
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-group input[type="submit"] {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .form-group input[type="submit"].visible {
+            display: inline-block;
+        }
+
+        .pdf-preview {
+            flex: 1;
+            overflow-y: auto;
+             height: 100vh; 
+            padding: 20px;
+            background-color: #eee;
+        }
+
+        .pdf-preview canvas {
+            display: block;
+            margin: 0 auto 20px;
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .footer .coffee-icon {
+            font-size: 20px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .form-container {
+                flex: none;
+                width: 100%;
+                border-right: none;
+                border-bottom: 2px solid #ccc;
+            }
+
+            .pdf-preview {
+                padding: 10px;
+            }
+        }
+    </style>
+
+    <! PDF.js library >
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body> 
+
+<div class="form-container" id="form-container">
+    <div class="logo">
+        <img src="kda.png" alt="Logo" />
+    </div>
+    <h2>Document Signing Portal</h2>
+
+    <form method="POST" action="/sign" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="apikey">API Key</label>
+            <input id="apikey" type="text" name="apikey" />
+        </div>
+
+        <div class="form-group">
+            <label for="file">Select a PDF File</label>
+            <input id="file" type="file" name="file" accept="application/pdf" required />
         </div>
 
         <div class="form-group">
@@ -91,15 +327,402 @@
             <input id="password" type="text" name="password" />
         </div>
 
+        <! Hidden page number input >
+        <input id="pageNumber" type="hidden" name="pageNumber" required />
+
+        <input id="signatureX" type="hidden" name="x" required />
+        <input id="signatureY" type="hidden" name="y" required />
+
+
         <div class="form-group">
-            <input type="submit" value="Sign Document" />
+            <input id="submit-btn" type="submit" value="Sign Document" />
         </div>
     </form>
+
+    <div class="footer">
+        Made with <span class="coffee-icon">☕</span> by C3iHub
+    </div>
 </div>
 
-<div class="footer">
-    Made with <span class="coffee-icon">☕</span> by C3iHub
+<div class="pdf-preview" id="pdf-preview">
+    <!PDF pages will be rendered here >
 </div>
+
+<script>
+    const fileInput = document.getElementById('file');
+    const previewContainer = document.getElementById('pdf-preview');
+    const pageNumberInput = document.getElementById('pageNumber');
+    const submitBtn = document.getElementById('submit-btn');
+    const formContainer = document.getElementById('form-container');
+
+    fileInput.addEventListener('change', async function () {
+        const file = fileInput.files[0];
+        if (!file || file.type !== 'application/pdf') return;
+
+        formContainer.classList.add('blurred');
+        previewContainer.innerHTML = '';
+        submitBtn.classList.remove('visible');
+
+        const fileReader = new FileReader();
+        fileReader.onload = async function () {
+            const typedArray = new Uint8Array(this.result);
+            const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 1.5 });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                const context = canvas.getContext('2d');
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                canvas.addEventListener('click', () => {
+                    
+                 
+
+                 pageNumberInput.value = i;
+                    
+            
+                    Array.from(previewContainer.querySelectorAll('canvas')).forEach(c => c.style.border = '1px solid #ccc');
+                    canvas.style.border = '3px solid green';
+
+                    formContainer.classList.remove('blurred');
+                    submitBtn.classList.add('visible');
+                });
+
+                previewContainer.appendChild(canvas);
+            }
+        };
+
+        fileReader.readAsArrayBuffer(file);
+    });
+</script>
+
+</body>
+</html>
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      flex-direction: row;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .form-container {
+      flex: 0 0 400px;
+      padding: 30px 20px;
+      background-color: #fff;
+      border-right: 2px solid #ccc;
+      overflow-y: auto;
+      transition: filter 0.3s ease;
+    }
+
+    .form-container.blurred {
+      filter: blur(3px);
+      pointer-events: none;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo img {
+      max-width: 100px;
+    }
+
+    .form-container h2 {
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: bold;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .form-group input[type="submit"] {
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: none;
+    }
+
+    .form-group input[type="submit"].visible {
+      display: inline-block;
+    }
+
+    .pdf-preview {
+      flex: 1;
+      overflow-y: auto;
+      height: 100vh;
+      padding: 20px;
+      background-color: #eee;
+      position: relative;
+    }
+
+    .pdf-preview canvas {
+      display: block;
+      margin: 0 auto 20px;
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .sign-box {
+      position: absolute;
+      /* width: 150px; */
+      /* height: 70px; */
+      width: 375px;     /* ← adjusted to match backend width */
+      height: 150px;    /* ← adjusted to match backend height */
+      border: 2px dashed #333;
+      background: #fff;
+      z-index: 20;
+      text-align: center;
+      font-size: 12px;
+      padding-top: 25px;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 14px;
+    }
+
+    .footer .coffee-icon {
+      font-size: 20px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      .form-container {
+        flex: none;
+        width: 100%;
+        border-right: none;
+        border-bottom: 2px solid #ccc;
+      }
+
+      .pdf-preview {
+        padding: 10px;
+      }
+    }
+  </style>
+
+  <!-- PDF.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+  <div class="form-container" id="form-container">
+    <div class="logo">
+      <img src="kda.png" alt="Logo" />
+    </div>
+    <h2>Document Signing Portal</h2>
+
+    <form method="POST" action="/sign" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="apikey">API Key</label>
+        <input id="apikey" type="text" name="apikey" />
+      </div>
+
+      <div class="form-group">
+        <label for="file">Select a PDF File</label>
+        <input id="file" type="file" name="file" accept="application/pdf" required />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" type="password" name="password" />
+      </div>
+
+      <input id="pageNumber" type="hidden" name="pageNumber" required />
+      <input id="signatureX" type="hidden" name="x" required />
+      <input id="signatureY" type="hidden" name="y" required />
+      <input type="hidden" id="signatureWidth" name="signatureWidth" />
+      <input type="hidden" id="signatureHeight" name="signatureHeight" />
+
+
+      <div class="form-group">
+        <input id="submit-btn" type="submit" value="Sign Document" />
+      </div>
+    </form>
+
+    <div class="footer">
+      Made with <span class="coffee-icon">☕</span> by C3iHub
+    </div>
+  </div>
+
+  <div class="pdf-preview" id="pdf-preview">
+    <!-- PDF pages will be rendered here -->
+  </div>
+<script>
+const fileInput = document.getElementById('file');
+const previewContainer = document.getElementById('pdf-preview');
+const pageNumberInput = document.getElementById('pageNumber');
+const signatureXInput = document.getElementById('signatureX');
+const signatureYInput = document.getElementById('signatureY');
+const signatureWidthInput = document.getElementById('signatureWidth');
+const signatureHeightInput = document.getElementById('signatureHeight');
+const submitBtn = document.getElementById('submit-btn');
+const formContainer = document.getElementById('form-container');
+
+const RENDER_SCALE = 1.5;
+
+fileInput.addEventListener('change', async function () {
+  const file = fileInput.files[0];
+  if (!file || file.type !== 'application/pdf') return;
+
+  formContainer.classList.add('blurred');
+  previewContainer.innerHTML = '';
+  submitBtn.classList.remove('visible');
+
+  const fileReader = new FileReader();
+  fileReader.onload = async function () {
+    const typedArray = new Uint8Array(this.result);
+    const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: RENDER_SCALE });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      const context = canvas.getContext('2d');
+      await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+      canvas.addEventListener('click', () => {
+        pageNumberInput.value = i;
+
+        // Remove old elements
+        document.getElementById('click-layer')?.remove();
+        document.querySelector('.sign-box')?.remove();
+
+        Array.from(previewContainer.querySelectorAll('canvas')).forEach(c => c.style.border = '1px solid #ccc');
+        canvas.style.border = '3px solid green';
+
+        formContainer.classList.remove('blurred');
+        submitBtn.classList.add('visible');
+
+        const clickLayer = document.createElement('div');
+        clickLayer.id = 'click-layer';
+        clickLayer.style.position = 'absolute';
+        clickLayer.style.left = canvas.offsetLeft + 'px';
+        clickLayer.style.top = canvas.offsetTop + 'px';
+        clickLayer.style.width = canvas.offsetWidth + 'px';
+        clickLayer.style.height = canvas.offsetHeight + 'px';
+        clickLayer.style.zIndex = 10;
+        clickLayer.style.cursor = 'crosshair';
+
+        previewContainer.appendChild(clickLayer);
+
+        let startX, startY, currentBox, isDragging = false;
+
+        clickLayer.onmousedown = (e) => {
+          const rect = clickLayer.getBoundingClientRect();
+          startX = e.clientX - rect.left;
+          startY = e.clientY - rect.top;
+          isDragging = false;
+
+          currentBox = document.createElement('div');
+          currentBox.className = 'sign-box';
+          currentBox.style.position = 'absolute';
+          currentBox.style.left = canvas.offsetLeft + startX + 'px';
+          currentBox.style.top = canvas.offsetTop + startY + 'px';
+          currentBox.style.border = '2px dashed red';
+          currentBox.style.background = 'rgba(255,0,0,0.1)';
+          currentBox.style.zIndex = 20;
+          previewContainer.appendChild(currentBox);
+
+          const onMouseMove = (e2) => {
+            isDragging = true;
+            const endX = e2.clientX - rect.left;
+            const endY = e2.clientY - rect.top;
+
+            const width = endX - startX;
+            const height = endY - startY;
+
+            currentBox.style.width = Math.abs(width) + 'px';
+            currentBox.style.height = Math.abs(height) + 'px';
+            currentBox.style.left = canvas.offsetLeft + Math.min(startX, endX) + 'px';
+            currentBox.style.top = canvas.offsetTop + Math.min(startY, endY) + 'px';
+          };
+
+          const onMouseUp = (e3) => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+
+            if (!isDragging) {
+              currentBox.remove();
+              return;
+            }
+
+            const rect = clickLayer.getBoundingClientRect();
+            const endX = e3.clientX - rect.left;
+            const endY = e3.clientY - rect.top;
+
+            const x1 = Math.min(startX, endX) / RENDER_SCALE;
+            const y1 = (clickLayer.offsetHeight - Math.max(startY, endY)) / RENDER_SCALE;
+            const w = Math.abs(endX - startX) / RENDER_SCALE;
+            const h = Math.abs(endY - startY) / RENDER_SCALE;
+
+            signatureXInput.value = Math.round(x1);
+            signatureYInput.value = Math.round(y1);
+            signatureWidthInput.value = Math.round(w);
+            signatureHeightInput.value = Math.round(h);
+          };
+
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        };
+      });
+
+      previewContainer.appendChild(canvas);
+    }
+  };
+
+  fileReader.readAsArrayBuffer(file);
+});
+</script>
+
+
 
 </body>
 </html>
