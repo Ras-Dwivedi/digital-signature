@@ -271,7 +271,7 @@ fileInput.addEventListener('change', async function () {
             if (!isDragging) {
             isDragging = true;
             previewContainer.appendChild(currentBox); // ✅ Append only after drag starts
-    }
+            }
             const endX = e2.clientX - rect.left;
             const endY = e2.clientY - rect.top;
 
@@ -311,19 +311,13 @@ fileInput.addEventListener('change', async function () {
             const x1 = Math.min(startX, endX) / RENDER_SCALE;
             // const y1 = (clickLayer.offsetHeight - Math.max(startY, endY)) / RENDER_SCALE;
             const yTop = Math.min(startY, endY);
-            // const boxHeight = Math.abs(endY - startY);
-            // const boxHeight = Math.abs(endY - startY);
-            // const w = Math.abs(endX - startX) / RENDER_SCALE;
-            // const h = boxHeight / RENDER_SCALE;
             const canvasHeight = canvas.height;
 
             const flippedY = canvasHeight - (yTop + boxHeight);
 
           signatureXInput.value = Math.round(x1);
-            // signatureYInput.value = Math.round(y1);
-           signatureYInput.value = Math.round(flippedY / RENDER_SCALE);
-          //  signatureWidthInput.value = Math.round(w);
-          //  signatureHeightInput.value = Math.round(h);
+          signatureYInput.value = Math.round(flippedY / RENDER_SCALE);
+          
 
           signatureWidthInput.value = Math.round(boxWidth);
            signatureHeightInput.value = Math.round(boxHeight);
@@ -341,8 +335,6 @@ fileInput.addEventListener('change', async function () {
   fileReader.readAsArrayBuffer(file);
 });
 </script>
-
-
 
 </body>
 </html>

@@ -377,11 +377,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
                     cs.transform(initialScale);
                 }
 
-//                // show background (just for debugging, to see the rect size + position)
-//                cs.setNonStrokingColor(new Color(.95f,.95f,.95f));
-//                cs.addRect(-5000, -5000, 10000, 10000);
-//                cs.fill();
-
+//                
 //                addHeader(cs, w, h, font);
                 cs.saveGraphicsState();
 
@@ -389,6 +385,8 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
 //                addCenterPart(cs, w, h, font, this.signDate);
 
                 addRightPart(cs, font, w, h, this.signDate, this.visibleLine1, this.visibleLine2);
+               // addRightPart(cs, font, 0, 0, w, h, this.signDate, this.visibleLine1, this.visibleLine2);
+
                 addCenterOverlay(cs, w, h, doc, imageBytes);
 
             }
@@ -478,6 +476,10 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
         // showTextRight(cs, font, sdf.format(signDate.getTime()), w, h - lineSpacing * 3, fontSize);
          showTextRight(cs, font, sdf.format(signDate.getTime()), w, h -lineSpacing*3, fontSize);
     }
+
+    
+
+
 
     private static void showTextRight(PDPageContentStream cs, PDFont font, String text, float w, float y, float fontSize ) throws IOException {
         cs.beginText();
