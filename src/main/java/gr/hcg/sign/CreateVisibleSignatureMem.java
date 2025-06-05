@@ -33,6 +33,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.apache.pdfbox.util.Hex;
 import org.apache.pdfbox.util.Matrix;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -119,7 +120,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
      * @param signatureFieldName optional name of an existing (unsigned) signature field
      * @throws IOException
      */
-    public Calendar signPDF(InputStream inputStream, OutputStream signedStream, String tsaUrl, String signatureFieldName, int pageIndex, float x, float y)  throws IOException
+    public Calendar signPDF(InputStream inputStream, OutputStream signedStream, String tsaUrl, String signatureFieldName, int pageIndex, float x, float y, float width, float height)  throws IOException
     {
         setTsaUrl(tsaUrl);
 
@@ -169,18 +170,21 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
                 // float width = doc.getPage(pageIndex).getMediaBox().getWidth();
                 // float height = doc.getPage(pageIndex).getMediaBox().getHeight();
                 
-                float width = doc.getPage(pageIndex).getMediaBox().getWidth();
-                float height = doc.getPage(pageIndex).getMediaBox().getHeight();
+                // float width = doc.getPage(pageIndex).getMediaBox().getWidth();
+                // float height = doc.getPage(pageIndex).getMediaBox().getHeight();
 
 
 
-              float boxWidth = 250;
-              float boxHeight = 100;
+            //   float boxWidth = 250;
+            //   float boxHeight = 100;
 
-             float adjustedX = Math.min(x, width - boxWidth);
-             float adjustedY = Math.max(0, y);
+            //  float adjustedX = Math.min(x, width - boxWidth);
+            //  float adjustedY = Math.max(0, y);
              
-            Rectangle2D humanRect = new Rectangle2D.Float(adjustedX, adjustedY, boxWidth, boxHeight);
+            // Rectangle2D humanRect = new Rectangle2D.Float(adjustedX, adjustedY, boxWidth, boxHeight);
+                
+            Rectangle2D humanRect = new Rectangle2D.Float(x, y, width, height);
+            System.out.println("x, y, width, height");
 
                 
 
@@ -239,7 +243,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
             //  int lastPageIndex = 0;
             signatureOptions = new SignatureOptions();
             signatureOptions.setPreferredSignatureSize(8192*2);
-            signatureOptions.setVisualSignature(createVisualSignatureTemplate(doc, pageIndex, rect)); //:- lastPageIndex
+            signatureOptions.setVisualSignature(createVisualSignatureTemplate(doc, pageIndex, rect)); //:- pageIndex
             signatureOptions.setPage(pageIndex); // :- needchangees for frontend
             doc.addSignature(signature, signatureInterface, signatureOptions);
 
@@ -266,7 +270,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
         float height = (float) humanRect.getHeight();
         PDPage page = doc.getPage(pageIndex); //0
         PDRectangle pageRect = page.getCropBox();
-        PDRectangle rect = new PDRectangle();
+        PDRectangle rect = new PDRectangle(); 
         // signing should be at the same position regardless of page rotation.
         switch (page.getRotation())
         {
@@ -411,10 +415,11 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
         cs.showText("Signature");
         cs.endText();
         cs.addRect(2*w/3-120, h-8, w/3+100, 5);
-        cs.fill();
+                cs.fill();
     }
 
     private static void addFooter(PDPageContentStream cs, float w, float h, PDDocument srcDoc) throws IOException {
+        
 
         cs.beginText();
         cs.newLineAtOffset(w/2 - 30, 20);
@@ -452,13 +457,26 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
 
 
     private static void addRightPart(PDPageContentStream cs, PDFont font, float w, float h, Calendar signDate, String visibleLine1, String visibleLine2) throws IOException {
-        float fontSize = 15f;
-        cs.setFont(font, fontSize);
-        showTextRight(cs, font, visibleLine1, w, h-50, fontSize);
-        showTextRight(cs, font, visibleLine2, w, h-70, fontSize);
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        showTextRight(cs, font, sdf.format(signDate.getTime()), w, h-90, fontSize);
+        // float fontSize = 15f;
+        float baseHeight = 100f;
+        float baseFontSize = 15f;
+        float scalingFactor = h/baseHeight;
+        // float fontSize = Math.max(8f, baseFontSize*scalingFactor);
+        float fontSize = Math.max(8f, Math.min(baseFontSize * scalingFactor, 24f)); // Clamp between 8 and 24
         
+        cs.setFont(font, fontSize);
+        
+        float lineSpacing = fontSize + 2f;
+        //showTextRight(cs, font, visibleLine1, w, h-50, fontSize);
+        //showTextRight(cs, font, visibleLine2, w, h-70, fontSize);
+        
+        showTextRight(cs, font, visibleLine1, w, h - lineSpacing * 1, fontSize);
+        showTextRight(cs, font, visibleLine2, w, h - lineSpacing * 2, fontSize);
+       
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        //showTextRight(cs, font, sdf.format(signDate.getTime()), w, h-90, fontSize);
+        // showTextRight(cs, font, sdf.format(signDate.getTime()), w, h - lineSpacing * 3, fontSize);
+         showTextRight(cs, font, sdf.format(signDate.getTime()), w, h -lineSpacing*3, fontSize);
     }
 
     private static void showTextRight(PDPageContentStream cs, PDFont font, String text, float w, float y, float fontSize ) throws IOException {
@@ -501,3 +519,14 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+

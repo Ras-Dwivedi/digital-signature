@@ -164,6 +164,10 @@ public class SignController {
 
                                                      @RequestParam(value = "y") float y,
 
+                                                     @RequestParam(value = "width") float width,
+
+                                                     @RequestParam(value = "height") float height,
+
                                                     HttpServletResponse response ) {
 
 
@@ -210,11 +214,11 @@ public class SignController {
 
             if(password.isPresent()){
 
-                signDate=signer.sign(file.getInputStream(), bos, password.orElse(""), pageNumber - 1, x, y);//:-pageNumber - 1
+                signDate=signer.sign(file.getInputStream(), bos, password.orElse(""), pageNumber - 1, x, y, width, height);//:-pageNumber - 1
 
             } else {
 
-                signDate=signer.sign(file.getInputStream(), bos, pageNumber - 1, x, y);//pageNumber - 1
+                signDate=signer.sign(file.getInputStream(), bos, pageNumber - 1, x, y, width, height);//pageNumber - 1
 
             }
 
@@ -414,6 +418,10 @@ public class SignController {
     
                                                 @RequestParam("y") float y,
 
+                                                @RequestParam(value = "width") float width,
+
+                                                @RequestParam(value = "height") float height,
+
 
                                                 HttpServletResponse response) {
 
@@ -470,11 +478,11 @@ public class SignController {
             // int lastPageIndex = pageNumber - 1;//:-
             if(password.isPresent()){
 
-                signDate=signer.sign(inputStream, bos, password.orElse(""), pageNumber - 1, x, y);// here is the logic to sign a file
+                signDate=signer.sign(inputStream, bos, password.orElse(""), pageNumber - 1, x, y, width, height);// here is the logic to sign a file
 
             } else {
 
-                signDate=signer.sign(inputStream, bos, pageNumber - 1, x, y);//:-pageNumber - 1
+                signDate=signer.sign(inputStream, bos, pageNumber - 1, x, y, width, height);//:-pageNumber - 1
 
             }
 
@@ -652,19 +660,24 @@ public class SignController {
             String password = request.getPassword();
             int pageNumber = request.getPageNumber(); //:-  
             float x = request.getX();
-            float y = request.getY();          
+            float y = request.getY();  
+            //float width = request.getY();  
+            //float height = request.getY();    
+            float width = request.getWidth();
+            float height = request.getHeight();
+      
             System.out.println("password: " + password);
             System.out.println("pageNumber: " + pageNumber);//:-
             if(!password.isEmpty()){
                 System.out.println("password: " + password);
                 System.out.println("password: is not empty");
 
-                signDate=signer.sign(inputStream, bos, password, pageNumber - 1, x, y);//:-pageNumber - 1
+                signDate=signer.sign(inputStream, bos, password, pageNumber - 1, x, y, width, height);//:-pageNumber - 1
 
             } else {
                 System.out.println("password: " + password);
                 System.out.println("password: is  empty");
-                signDate=signer.sign(inputStream, bos, pageNumber - 1, x, y);//pageNumber - 1
+                signDate=signer.sign(inputStream, bos, pageNumber - 1, x, y, width, height);//pageNumber - 1
 
             }
 
@@ -815,6 +828,12 @@ class SignPdfRequest {
     @JsonProperty("y")
     private float y;
 
+    @JsonProperty("width")
+    private float width;
+
+    @JsonProperty("height")
+    private float height;
+
 
     public String getBase64File() {
 
@@ -845,6 +864,10 @@ class SignPdfRequest {
     public void setPageNumber(int pageNumber) { //:-'' <-- Add this setter too
         this.pageNumber = pageNumber;
     }
+    
+    
+
+
 
     public float getX() { return x; }
     public void setX(float x) { this.x = x; }
@@ -852,5 +875,10 @@ class SignPdfRequest {
     public float getY() { return y; }
     public void setY(float y) { this.y = y; }
 
+   public float getWidth() { return width; }
+    public void setWidth(float width) { this.width = width; }
+
+    public float getHeight() { return height; }
+    public void setHeight(float height) { this.height = height; }
    
 }

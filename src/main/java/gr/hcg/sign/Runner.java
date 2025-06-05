@@ -39,6 +39,8 @@ public class Runner implements CommandLineRunner {
      int pageNumber = 0;
         float x=0;
         float y=0;
+        float width = 250;  // default width
+        float height = 100; // default height
 
         try {
             if (args.length > 0) {
@@ -48,12 +50,17 @@ public class Runner implements CommandLineRunner {
                 x = Integer.parseInt(args[1]);
                 y = Integer.parseInt(args[2]);
             }
+             if (args.length > 4) {
+                width = Float.parseFloat(args[3]);     // ← new: width from args
+                height = Float.parseFloat(args[4]);    // ← new: height from args
+            }
         } catch (NumberFormatException e) {
             System.out.println("Invalid input argument(s), using default values.");
         }
 
         System.out.printf("Signing on page: %d at position (x=%d, y=%d)%n", pageNumber, x, y);
-        signer.sign(fis, fos, pageNumber, x, y);
+        signer.sign(fis, fos, pageNumber, x, y, width, height);
+   
    
     }
 }

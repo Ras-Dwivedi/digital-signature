@@ -47,6 +47,7 @@ public class CheckSignatureController {
         logger.info("Total memory: " + Runtime.getRuntime().totalMemory() / 1024 / 1024);
         logger.info("Max memory: " + Runtime.getRuntime().maxMemory() / 1024 / 1024);
         logger.info("Free memory: " + Runtime.getRuntime().freeMemory() / 1024 / 1024);
+    
 
         return new ModelAndView("home", model.asMap());
 
