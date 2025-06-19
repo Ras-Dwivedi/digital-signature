@@ -111,6 +111,8 @@ public abstract class CreateSignatureBase implements SignatureInterface
     public void setTsaUrl(String tsaUrl)
     {
         this.tsaUrl = tsaUrl;
+        // this.tsaUrl = null;
+
     }
 
     /**
@@ -178,6 +180,7 @@ public abstract class CreateSignatureBase implements SignatureInterface
         try {
             X500Principal x500Principal = ((X509Certificate)certificate).getSubjectX500Principal();
             String dn = x500Principal.getName(X500Principal.RFC1779);
+            System.out.println("signature Name " +x500Principal.getName());//with the help of this line we can access the name of Certificate.
             String cn = null;
 
             String[] dnComponents = dn.split(", ");
@@ -185,9 +188,11 @@ public abstract class CreateSignatureBase implements SignatureInterface
                 if (component.startsWith("CN=")) {
                     cn = component.substring(3);
                     break; // Once found, exit the loop
-                }
+                   
             }
-
+        }
+        
+    
             if (cn != null) {
                 // 'cn' contains the Common Name
                 return cn;

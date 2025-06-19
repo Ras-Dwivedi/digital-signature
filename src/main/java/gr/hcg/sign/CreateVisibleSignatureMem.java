@@ -79,6 +79,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
     public String uuid = UUID.randomUUID().toString();
 
 
+
     private Calendar signDate = null;
 
     /**
@@ -168,23 +169,9 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
                 // int lastPageIndex = doc.getNumberOfPages() - 1; //:-Example: If there are 5 pages, their indices are 0 to 4. So lastPageIndex = 5 - 1 = 4
                 // System.out.println("no of pages are "+ doc.getNumberOfPages());
                 // float width = doc.getPage(pageIndex).getMediaBox().getWidth();
-                // float height = doc.getPage(pageIndex).getMediaBox().getHeight();
-                
-                // float width = doc.getPage(pageIndex).getMediaBox().getWidth();
-                // float height = doc.getPage(pageIndex).getMediaBox().getHeight();
-
-
-
-            //   float boxWidth = 250;
-            //   float boxHeight = 100;
-
-            //  float adjustedX = Math.min(x, width - boxWidth);
-            //  float adjustedY = Math.max(0, y);
-             
-            // Rectangle2D humanRect = new Rectangle2D.Float(adjustedX, adjustedY, boxWidth, boxHeight);
-                
+    
             Rectangle2D humanRect = new Rectangle2D.Float(x, y, width, height);
-            System.out.println("x, y, width, height");
+            
 
                 
 
@@ -192,6 +179,11 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
 
                 rect = createSignatureRectangle(doc, humanRect, pageIndex);
             }
+            System.out.println(pageIndex +" -:pageIndex");
+            System.out.println(x+" -:x");
+            System.out.println(y+" -:y");
+            System.out.println(width+" -:width");
+            System.out.println(height+" -:height");
 
             // Optional: certify
             // can be done only if version is at least 1.5 and if not already set
@@ -384,10 +376,21 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
 //                addFooter(cs, w, h, srcDoc);
 //                addCenterPart(cs, w, h, font, this.signDate);
 
+                //    addRightPart(cs, font, w, h, this.signDate, this.visibleLine1, this.visibleLine2);
+
+ 
                 addRightPart(cs, font, w, h, this.signDate, this.visibleLine1, this.visibleLine2);
                // addRightPart(cs, font, 0, 0, w, h, this.signDate, this.visibleLine1, this.visibleLine2);
-
+               System.out.println(cs +" -: cs");
+                System.out.println(font +" -: font");
+                 System.out.println(w +" -:w");
+                  System.out.println(h+ " -:h");
+                   System.out.println(signDate+ " -:signDate");
+                    System.out.println(visibleLine1);
+                     System.out.println(visibleLine2);
+                     
                 addCenterOverlay(cs, w, h, doc, imageBytes);
+                
 
             }
 
@@ -452,44 +455,68 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
 //        cs.drawImage(img, w/2, h/2);
 //        cs.restoreGraphicsState();
     }
-
-
     private static void addRightPart(PDPageContentStream cs, PDFont font, float w, float h, Calendar signDate, String visibleLine1, String visibleLine2) throws IOException {
-        // float fontSize = 15f;
-        float baseHeight = 100f;
-        float baseFontSize = 15f;
-        float scalingFactor = h/baseHeight;
-        // float fontSize = Math.max(8f, baseFontSize*scalingFactor);
-        float fontSize = Math.max(8f, Math.min(baseFontSize * scalingFactor, 24f)); // Clamp between 8 and 24
-        
-        cs.setFont(font, fontSize);
-        
-        float lineSpacing = fontSize + 2f;
-        //showTextRight(cs, font, visibleLine1, w, h-50, fontSize);
-        //showTextRight(cs, font, visibleLine2, w, h-70, fontSize);
-        
-        showTextRight(cs, font, visibleLine1, w, h - lineSpacing * 1, fontSize);
-        showTextRight(cs, font, visibleLine2, w, h - lineSpacing * 2, fontSize);
-       
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        //showTextRight(cs, font, sdf.format(signDate.getTime()), w, h-90, fontSize);
-        // showTextRight(cs, font, sdf.format(signDate.getTime()), w, h - lineSpacing * 3, fontSize);
-         showTextRight(cs, font, sdf.format(signDate.getTime()), w, h -lineSpacing*3, fontSize);
-    }
+    float baseFontSize = 15f;
+    float minFontSize = 6f;
+    float fontSize = baseFontSize;
 
-    
+    String dateText = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(signDate.getTime());
+
+    float lineSpacing;
+    float totalTextHeight;
+    float maxTextWidth;
+
+    // Loop to reduce font size until both height and width fit
+    do {
+        lineSpacing = fontSize + 2f;
+        totalTextHeight = 3 * lineSpacing;
+
+        // Check max width across all 3 lines
+        maxTextWidth = 0;
+        for (String text : new String[]{visibleLine1, visibleLine2, dateText}) {
+            float textWidth = font.getStringWidth(text) / 1000 * fontSize;
+            if (textWidth > maxTextWidth) {
+                maxTextWidth = textWidth;
+            }
+        }
+
+        if ((totalTextHeight > h || maxTextWidth > w) && fontSize > minFontSize) {
+            fontSize -= 0.5f;
+        } else {
+            break;
+        }
+
+    } while (fontSize > minFontSize);
+
+    cs.setFont(font, fontSize);
+    cs.setNonStrokingColor(Color.black);
+
+    // Center vertically
+    float startY = (h - totalTextHeight) / 2;
+
+    // Draw lines: bottom-up
+    showTextRight(cs, font, visibleLine1, w, startY + 2 * lineSpacing, fontSize);
+    showTextRight(cs, font, visibleLine2, w, startY + 1 * lineSpacing, fontSize);
+    showTextRight(cs, font, dateText, w, startY, fontSize);
+}
 
 
 
     private static void showTextRight(PDPageContentStream cs, PDFont font, String text, float w, float y, float fontSize ) throws IOException {
         cs.beginText();
         // float xoffset = w - font.getStringWidth(text) / 1000 * fontSize - 15;
-        float xoffset = (w - (font.getStringWidth(text) / 1000 * fontSize)) / 2;
+        // float xoffset = (w - (font.getStringWidth(text) / 1000 * fontSize)) / 2;
+        float textWidth = font.getStringWidth(text) / 1000 * fontSize;
+        float xoffset = (w - textWidth) / 2; // center align
         cs.newLineAtOffset(xoffset, y);
         cs.setNonStrokingColor(Color.black);
         cs.showText(text);
         cs.endText();
     }
+
+
+
+
 
     // Find an existing signature (assumed to be empty). You will usually not need this.
     private PDSignature findExistingSignature(PDAcroForm acroForm, String sigFieldName)

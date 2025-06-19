@@ -200,6 +200,8 @@ const RENDER_SCALE = 1.5;
 const MIN_WIDTH = 100;  // px
 const MIN_HEIGHT = 40; //
 
+
+ 
 fileInput.addEventListener('change', async function () {
   const file = fileInput.files[0];
   if (!file || file.type !== 'application/pdf') return;
@@ -309,18 +311,19 @@ fileInput.addEventListener('change', async function () {
             }
 
             const x1 = Math.min(startX, endX) / RENDER_SCALE;
-            // const y1 = (clickLayer.offsetHeight - Math.max(startY, endY)) / RENDER_SCALE;
             const yTop = Math.min(startY, endY);
+
+            
             const canvasHeight = canvas.height;
 
             const flippedY = canvasHeight - (yTop + boxHeight);
+            // let yPos = page.getMediaBox().getHeight() - y -height;
+            
 
           signatureXInput.value = Math.round(x1);
           signatureYInput.value = Math.round(flippedY / RENDER_SCALE);
-          
-
-          signatureWidthInput.value = Math.round(boxWidth);
-           signatureHeightInput.value = Math.round(boxHeight);
+          signatureWidthInput.value = Math.round(boxWidth/RENDER_SCALE);
+           signatureHeightInput.value = Math.round(boxHeight/RENDER_SCALE);
           };
 
           document.addEventListener('mousemove', onMouseMove);

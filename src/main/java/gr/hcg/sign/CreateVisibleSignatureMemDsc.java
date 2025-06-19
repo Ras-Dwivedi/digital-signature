@@ -78,6 +78,7 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
     public String signatureLocation = "Kanpur";
     public String signatureReason = "IDENTICAL COPY";
     public String visibleLine1 = "Digitally signed by "+ super.get_signer_name();
+    // public String visibleLine1 = super.get_signer_name();
     public String visibleLine2 = "From Kanpur Development Authority";
     public String uuid = UUID.randomUUID().toString();
 
@@ -141,7 +142,7 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
             PDAcroForm acroForm = doc.getDocumentCatalog().getAcroForm();
             PDRectangle rect = null;
 
-            PDShrink.shrinkFirstpage(doc);
+            // PDShrink.shrinkFirstpage(doc);
 
             // sign a PDF with an existing empty signature, as created by the CreateEmptySignatureForm example.
             if (acroForm != null)
@@ -167,11 +168,14 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
             if (rect == null)
             {
                 // int lastPageIndex = doc.getNumberOfPages() - 1;
-                System.out.println("no of pages are "+ doc.getNumberOfPages());
-                float width1 = doc.getPage(pageIndex).getMediaBox().getWidth();
-                float height1 = doc.getPage(pageIndex).getMediaBox().getHeight();
-                Rectangle2D humanRect = new Rectangle2D.Float(3*width1/5, height1/6, width1/4, 100);
+                // System.out.println("no of pages are "+ doc.getNumberOfPages());
+                // float width1 = doc.getPage(pageIndex).getMediaBox().getWidth();
+                // float height1 = doc.getPage(pageIndex).getMediaBox().getHeight();
+                // Rectangle2D humanRect = new Rectangle2D.Float(3*width1/5, height1/6, width1/4, 100);
+                Rectangle2D humanRect = new Rectangle2D.Float(x, y, width, height);
                 rect = createSignatureRectangle(doc, humanRect, pageIndex);
+                 
+                
             }
 
             // Optional: certify
@@ -310,7 +314,8 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
             PDResources res = new PDResources();
             form.setResources(res);
             form.setFormType(1);
-            PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
+            // PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
+             PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
             float height = bbox.getHeight();
             Matrix initialScale = null;
             switch (srcDoc.getPage(pageNum).getRotation())
@@ -360,11 +365,12 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
                 //cs.setNonStrokingColor(new Color(.95f,.95f,.95f));
                 //cs.addRect(-5000, -5000, 10000, 10000);
                 //cs.fill();
-                addHeader(cs, w, h, font);
+
+                // addHeader(cs, w, h, font);
                 cs.saveGraphicsState();
 
-                addFooter(cs, w, h, srcDoc);
-                addCenterPart(cs, w, h, font, this.signDate);
+                // addFooter(cs, w, h, srcDoc);
+                // addCenterPart(cs, w, h, font, this.signDate);
 
                 addRightPart(cs, font, w, h, this.signDate, this.visibleLine1, this.visibleLine2);
                 addCenterOverlay(cs, w, h, doc, imageBytes);
@@ -380,19 +386,19 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
     private static void addHeader(PDPageContentStream cs, float w, float h, PDFont font) throws IOException {
         cs.setNonStrokingColor(Color.BLACK);
 
-        //cs.addRect(10, h-8, w/3+10, 5);
+        cs.addRect(10, h-8, w/3+10, 5);
         cs.fill();
 
         float fontSize = 13;
 
         cs.beginText();
         cs.setFont(font, fontSize);
-        // cs.setNonStrokingColor(Color.black);
+        cs.setNonStrokingColor(Color.black);
 
         cs.newLineAtOffset(w/3 + 80, h-8);
         cs.showText("Signature");
         cs.endText();
-        // cs.addRect(2*w/3-120, h-8, w/3+100, 5);
+        cs.addRect(2*w/3-120, h-8, w/3+100, 5);
         cs.fill();
     }
 
@@ -400,22 +406,22 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
 
         cs.beginText();
         cs.newLineAtOffset(w/2 - 30, 20);
-        // cs.showText("page" + srcDoc.getNumberOfPages());
+        cs.showText("page" + srcDoc.getNumberOfPages());
         cs.endText();
     }
 
-    private static void addCenterPart(PDPageContentStream cs, float w, float h, PDFont font, Calendar signDate) throws IOException {
+//     private static void addCenterPart(PDPageContentStream cs, float w, float h, PDFont font, Calendar signDate) throws IOException {
 
-        cs.beginText();
-        cs.setFont(font, 10);
-        cs.newLineAtOffset(w/2-40, h-40);
-//        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyMMddHHmmssSZ");
-//        cs.showText(sdf2.format(signDate.getTime()));
-         cs.showText("This is a digitally signed document and does not require physical signature");
-         cs.newLine();
-        cs.endText();
+//         cs.beginText();
+//         cs.setFont(font, 10);
+//         cs.newLineAtOffset(w/2-40, h-40);
+// //        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyMMddHHmmssSZ");
+// //        cs.showText(sdf2.format(signDate.getTime()));
+//          cs.showText("This is a digitally signed document and does not require physical signature");
+//          cs.newLine();
+//         cs.endText();
 
-    }
+//     }
 
     private static void addCenterOverlay(PDPageContentStream cs, float w, float h, PDDocument doc, byte[] imageBytes) throws IOException {
 
@@ -432,19 +438,59 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
 //        cs.restoreGraphicsState();
     }
 
-
     private static void addRightPart(PDPageContentStream cs, PDFont font, float w, float h, Calendar signDate, String visibleLine1, String visibleLine2) throws IOException {
-        float fontSize = 15f;
-        cs.setFont(font, fontSize);
-        showTextRight(cs, font, visibleLine1, w, h-50, fontSize);
-        showTextRight(cs, font, visibleLine2, w, h-70, fontSize);
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        showTextRight(cs, font, sdf.format(signDate.getTime()), w, h-90, fontSize);
-    }
+    float baseFontSize = 15f;
+    float minFontSize = 6f;
+    float fontSize = baseFontSize;
+
+    String dateText = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(signDate.getTime());
+
+    float lineSpacing;
+    float totalTextHeight;
+    float maxTextWidth;
+
+    // Loop to reduce font size until both height and width fit
+    do {
+        lineSpacing = fontSize + 2f;
+        totalTextHeight = 3 * lineSpacing;
+
+        // Check max width across all 3 lines
+        maxTextWidth = 0;
+        for (String text : new String[]{visibleLine1, visibleLine2, dateText}) {
+            float textWidth = font.getStringWidth(text) / 1000 * fontSize;
+            if (textWidth > maxTextWidth) {
+                maxTextWidth = textWidth;
+            }
+        }
+
+        if ((totalTextHeight > h || maxTextWidth > w) && fontSize > minFontSize) {
+            fontSize -= 0.5f;
+        } else {
+            break;
+        }
+
+    } while (fontSize > minFontSize);
+
+    cs.setFont(font, fontSize);
+    cs.setNonStrokingColor(Color.black);
+
+    // Center vertically
+    float startY = (h - totalTextHeight) / 2;
+
+    // Draw lines: bottom-up
+    showTextRight(cs, font, visibleLine1, w, startY + 2 * lineSpacing, fontSize);
+    showTextRight(cs, font, visibleLine2, w, startY + 1 * lineSpacing, fontSize);
+    showTextRight(cs, font, dateText, w, startY, fontSize);
+}
+
+
 
     private static void showTextRight(PDPageContentStream cs, PDFont font, String text, float w, float y, float fontSize ) throws IOException {
         cs.beginText();
-        float xoffset = w - font.getStringWidth(text) / 1000 * fontSize - 15;
+        // float xoffset = w - font.getStringWidth(text) / 1000 * fontSize - 15;
+        // float xoffset = (w - (font.getStringWidth(text) / 1000 * fontSize)) / 2;
+        float textWidth = font.getStringWidth(text) / 1000 * fontSize;
+        float xoffset = (w - textWidth) / 2; // center align
         cs.newLineAtOffset(xoffset, y);
         cs.setNonStrokingColor(Color.black);
         cs.showText(text);
@@ -481,3 +527,6 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
     }
 
 }
+
+
+
