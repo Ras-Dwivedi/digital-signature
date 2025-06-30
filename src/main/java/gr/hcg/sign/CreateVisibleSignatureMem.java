@@ -75,7 +75,9 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
     public String signatureLocation = "Kanpur";
     public String signatureReason = "IDENTICAL COPY";
     public String visibleLine1 = "Digitally signed by "+ super.get_signer_name();
-    public String visibleLine2 = "From Kanpur Development Authority";
+    // public String visibleLine2 = "From Kanpur Development Authority";
+     public String visibleLine2 = "Department of Science & Technology";
+    
     public String uuid = UUID.randomUUID().toString();
 
 
@@ -465,7 +467,6 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
     float lineSpacing;
     float totalTextHeight;
     float maxTextWidth;
-
     // Loop to reduce font size until both height and width fit
     do {
         lineSpacing = fontSize + 2f;
@@ -480,8 +481,9 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
             }
         }
 
-        if ((totalTextHeight > h || maxTextWidth > w) && fontSize > minFontSize) {
-            fontSize -= 0.5f;
+        if ((totalTextHeight > h || maxTextWidth> w) && fontSize > minFontSize) {
+            // fontSize -= 0.5f;
+            fontSize -= 1f;
         } else {
             break;
         }
@@ -494,10 +496,13 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
     // Center vertically
     float startY = (h - totalTextHeight) / 2;
 
+
+
     // Draw lines: bottom-up
     showTextRight(cs, font, visibleLine1, w, startY + 2 * lineSpacing, fontSize);
     showTextRight(cs, font, visibleLine2, w, startY + 1 * lineSpacing, fontSize);
     showTextRight(cs, font, dateText, w, startY, fontSize);
+
 }
 
 

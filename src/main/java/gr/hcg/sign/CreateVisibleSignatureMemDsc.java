@@ -78,9 +78,11 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
     public String signatureLocation = "Kanpur";
     public String signatureReason = "IDENTICAL COPY";
     public String visibleLine1 = "Digitally signed by "+ super.get_signer_name();
-    // public String visibleLine1 = super.get_signer_name();
-    public String visibleLine2 = "From Kanpur Development Authority";
+    // public String visibleLine2 = "From Kanpur Development Authority";
+    public String visibleLine2 = "Department of Science & Technology";
+
     public String uuid = UUID.randomUUID().toString();
+    
 
 
     private Calendar signDate = null;
