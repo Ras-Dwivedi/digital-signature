@@ -181,11 +181,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
 
                 rect = createSignatureRectangle(doc, humanRect, pageIndex);
             }
-            System.out.println(pageIndex +" -:pageIndex");
-            System.out.println(x+" -:x");
-            System.out.println(y+" -:y");
-            System.out.println(width+" -:width");
-            System.out.println(height+" -:height");
+            
 
             // Optional: certify
             // can be done only if version is at least 1.5 and if not already set
@@ -383,13 +379,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
  
                 addRightPart(cs, font, w, h, this.signDate, this.visibleLine1, this.visibleLine2);
                // addRightPart(cs, font, 0, 0, w, h, this.signDate, this.visibleLine1, this.visibleLine2);
-               System.out.println(cs +" -: cs");
-                System.out.println(font +" -: font");
-                 System.out.println(w +" -:w");
-                  System.out.println(h+ " -:h");
-                   System.out.println(signDate+ " -:signDate");
-                    System.out.println(visibleLine1);
-                     System.out.println(visibleLine2);
+              
                      
                 addCenterOverlay(cs, w, h, doc, imageBytes);
                 
@@ -401,6 +391,99 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
             return new ByteArrayInputStream(baos.toByteArray());
         }
     }
+
+// private InputStream createVisualSignatureTemplate(PDDocument srcDoc, int pageNum, PDRectangle ignoredRect) throws IOException {
+//     try (PDDocument doc = new PDDocument()) {
+//         PDPage srcPage = srcDoc.getPage(pageNum);
+//         PDPage page = new PDPage(srcPage.getMediaBox());
+//         doc.addPage(page);
+
+//         PDAcroForm acroForm = new PDAcroForm(doc);
+//         doc.getDocumentCatalog().setAcroForm(acroForm);
+
+//         PDSignatureField signatureField = new PDSignatureField(acroForm);
+//         PDAnnotationWidget widget = signatureField.getWidgets().get(0);
+//         acroForm.getFields().add(signatureField);
+
+//         acroForm.setSignaturesExist(true);
+//         acroForm.setAppendOnly(true);
+//         acroForm.getCOSObject().setDirect(true);
+
+//         // ✅ Hardcoded signature rectangle position (X, Y, Width, Height)
+//         float x = 350f;     // distance from left
+//         float y = 100f;     // distance from bottom (just above Ekta Kapoor)
+//         float width = 200f;
+//         float height = 60f;
+//         PDRectangle rect = new PDRectangle(x, y, width, height);
+//         widget.setRectangle(rect);
+
+//         // 🧱 Build appearance stream and form
+//         PDStream stream = new PDStream(doc);
+//         PDFormXObject form = new PDFormXObject(stream);
+//         PDResources res = new PDResources();
+//         form.setResources(res);
+//         form.setFormType(1);
+
+//         PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
+//         float h = bbox.getHeight();
+//         Matrix initialScale = null;
+
+//         switch (srcPage.getRotation()) {
+//             case 90:
+//                 form.setMatrix(AffineTransform.getQuadrantRotateInstance(1));
+//                 initialScale = Matrix.getScaleInstance(bbox.getWidth() / bbox.getHeight(), bbox.getHeight() / bbox.getWidth());
+//                 h = bbox.getWidth();
+//                 break;
+//             case 180:
+//                 form.setMatrix(AffineTransform.getQuadrantRotateInstance(2));
+//                 break;
+//             case 270:
+//                 form.setMatrix(AffineTransform.getQuadrantRotateInstance(3));
+//                 initialScale = Matrix.getScaleInstance(bbox.getWidth() / bbox.getHeight(), bbox.getHeight() / bbox.getWidth());
+//                 h = bbox.getWidth();
+//                 break;
+//             case 0:
+//             default:
+//                 break;
+//         }
+
+//         form.setBBox(bbox);
+
+//         // 📝 Load custom Calibri font
+//         InputStream fontInputStream = CreateVisibleSignatureMem.class.getClassLoader().getResourceAsStream("calibri.ttf");
+//         PDFont font = PDType0Font.load(doc, fontInputStream);
+
+//         // 🔄 Appearance
+//         PDAppearanceDictionary appearance = new PDAppearanceDictionary();
+//         appearance.getCOSObject().setDirect(true);
+//         PDAppearanceStream appearanceStream = new PDAppearanceStream(form.getCOSObject());
+//         appearance.setNormalAppearance(appearanceStream);
+//         widget.setAppearance(appearance);
+
+//         float w = appearanceStream.getBBox().getWidth();
+
+//         // ✍️ Start drawing signature content
+//         try (PDPageContentStream cs = new PDPageContentStream(doc, appearanceStream)) {
+//             if (initialScale != null) {
+//                 cs.transform(initialScale);
+//             }
+
+//             cs.saveGraphicsState();
+
+//             // ✅ Add right-aligned visible text inside the fixed rectangle
+//             addRightPart(cs, font, w, h, this.signDate, this.visibleLine1, this.visibleLine2);
+
+//             // Optional: add image in the center of signature rect (if needed)
+//             addCenterOverlay(cs, w, h, doc, imageBytes);
+//         }
+
+//         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//         doc.save(baos);
+//         return new ByteArrayInputStream(baos.toByteArray());
+//     }
+// }
+
+
 
     private static void addHeader(PDPageContentStream cs, float w, float h, PDFont font) throws IOException {
         cs.setNonStrokingColor(Color.BLACK);

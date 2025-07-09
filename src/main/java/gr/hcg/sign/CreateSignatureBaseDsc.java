@@ -90,9 +90,9 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
                 if (cert instanceof X509Certificate)
                 {
                     // avoid expired certificate
-//                    ((X509Certificate) cert).checkValidity();
+                //    ((X509Certificate) cert).checkValidity();  //checkValidity.
 
-                    SigUtils.checkCertificateUsage((X509Certificate) cert);
+                    // SigUtils.checkCertificateUsage((X509Certificate) cert);
                 }
             } else {
                 logger.debug("certificate chain not found");
@@ -204,7 +204,7 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
      */
     public CMSSignedData getSignature(InputStream content, char[] password) throws KeyStoreException, CertificateException, IOException,
             NoSuchAlgorithmException, UnrecoverableKeyException, InvalidKeyException, SignatureException, CMSException, OperatorCreationException {
-        String configPath = "config.cfg";
+                String configPath = "config.cfg";
         Provider pkcs11Provider = Security.getProvider("SunPKCS11");
         pkcs11Provider = pkcs11Provider.configure(configPath);
         KeyStore pkcs11KeyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
