@@ -181,12 +181,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
 
                 rect = createSignatureRectangle(doc, humanRect, pageIndex);
             }
-            System.out.println(pageIndex +" -:pageIndex");
-            System.out.println(x+" -:x");
-            System.out.println(y+" -:y");
-            System.out.println(width+" -:width");
-            System.out.println(height+" -:height");
-
+            
             // Optional: certify
             // can be done only if version is at least 1.5 and if not already set
             // doing this on a PDF/A-1b file fails validation by Adobe preflight (PDFBOX-3821)
@@ -383,14 +378,6 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
  
                 addRightPart(cs, font, w, h, this.signDate, this.visibleLine1, this.visibleLine2);
                // addRightPart(cs, font, 0, 0, w, h, this.signDate, this.visibleLine1, this.visibleLine2);
-               System.out.println(cs +" -: cs");
-                System.out.println(font +" -: font");
-                 System.out.println(w +" -:w");
-                  System.out.println(h+ " -:h");
-                   System.out.println(signDate+ " -:signDate");
-                    System.out.println(visibleLine1);
-                     System.out.println(visibleLine2);
-                     
                 addCenterOverlay(cs, w, h, doc, imageBytes);
                 
 
