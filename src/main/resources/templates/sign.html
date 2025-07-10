@@ -228,6 +228,14 @@ fileInput.addEventListener('change', async function () {
 
       canvas.addEventListener('click', () => {
         pageNumberInput.value = i;
+        pageNumberInput.value = i;
+        signatureXInput.value = '';
+        signatureYInput.value = '';
+        signatureWidthInput.value = '';
+        signatureHeightInput.value = '';
+        submitBtn.classList.remove('visible');
+        // Also remove any existing red box
+        document.querySelector('.sign-box')?.remove();
 
         // Remove old elements
         document.getElementById('click-layer')?.remove();
@@ -337,6 +345,21 @@ fileInput.addEventListener('change', async function () {
 
   fileReader.readAsArrayBuffer(file);
 });
+
+//  Form validation to prevent submission if rectangle is not drawn
+document.querySelector("form").addEventListener("submit", function (e) {
+  const missingFields =
+    !pageNumberInput.value ||
+    !signatureXInput.value ||
+    !signatureYInput.value ||
+    !signatureWidthInput.value ||
+    !signatureHeightInput.value;
+
+  if (missingFields) {
+    e.preventDefault(); // Stops the form from submitting to backend
+    alert("❗ Please draw a rectangle on the PDF page before submitting.");
+  }
+}); 
 </script>
 
 </body>
