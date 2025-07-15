@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #fff;
+            border: 2px solid #ccc; /* Add a border */
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            text-align: center;
+        }
+
+        .logo img {
+            max-width: 100px; /* Adjust the logo size as needed */
+        }
+
+        .container h2 {
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-group input[type="submit"] {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .form-group input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .footer .coffee-icon {
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo">
+        <!-- <img src="./DST.png" alt="Logo" />  Replace "your-logo.png" with your logo file -->
+        <img src="kda.png" alt="Logo" /> 
+    </div>
+    <h2>Document Signing Portal</h2>
+    <form method="POST" action="/sign" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="apikey">API Key</label>
+            <input id="apikey" type="text" name="apikey" />
+        </div>
+
+        <div class="form-group">
+            <label for="file">Select a File</label>
+            <input id="file" type="file" name="file" />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" type="text" name="password" />
+        </div>
+
+        <div class="form-group">
+            <input type="submit" value="Sign Document" />
+        </div>
+    </form>
+</div>
+
+<div class="footer">
+    Made with <span class="coffee-icon">☕</span> by C3iHub
+</div>
+
+</body>
+</html>
