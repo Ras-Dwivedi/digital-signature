@@ -165,7 +165,19 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
                 System.out.println("no of pages are "+ doc.getNumberOfPages());
                 float width = doc.getPage(lastPageIndex).getMediaBox().getWidth();
                 float height = doc.getPage(lastPageIndex).getMediaBox().getHeight();
-                Rectangle2D humanRect = new Rectangle2D.Float(3*width/5, height/6, width/4, 100);
+                // Rectangle2D humanRect = new Rectangle2D.Float(3*width/4.2f, height/6-30, width/4, 100); // landscape page 
+                //Rectangle2D humanRect = new Rectangle2D.Float(3*width/5+65, height/6-110, width/4, 100); //portrait page
+                 Rectangle2D humanRect;
+
+               if (width > height) {
+               // Landscape page
+               humanRect = new Rectangle2D.Float(3 * width / 4.2f, height / 6 - 30, width / 4, 100);
+               System.out.println("Page is Landscape");
+               } else {
+               // Portrait page
+              humanRect = new Rectangle2D.Float(3 * width / 5 + 65, height / 6 - 110, width / 4, 100);
+             System.out.println("Page is Portrait");
+            }
                 rect = createSignatureRectangle(doc, humanRect);
             }
 

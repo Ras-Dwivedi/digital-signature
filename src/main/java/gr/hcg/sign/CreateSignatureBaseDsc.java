@@ -126,7 +126,8 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
 
     public void setTsaUrl(String tsaUrl)
     {
-        this.tsaUrl = tsaUrl;
+        // this.tsaUrl = tsaUrl;
+           this.tsaUrl = null;
     }
 
     /**

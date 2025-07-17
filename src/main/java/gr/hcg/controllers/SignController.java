@@ -209,7 +209,15 @@ public class SignController {
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
              
+            try{
             Calendar signDate = signer.sign(file.getInputStream(), bos, password.get());
+            } catch(RuntimeException e){
+            //// This handles "No DSC detected or incorrect password provided."
+            model.addAttribute("message", e.getMessage());
+            model.addAttribute("error", true);
+            return respondHtmlOrJson(json, model, response);
+            }
+            
             // Calendar signDate;
 
             // if(password.isPresent()){

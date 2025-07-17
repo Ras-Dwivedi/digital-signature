@@ -316,7 +316,8 @@ public class CreateStringSignatureBase
      */
     public void setTsaUrl(String tsaUrl)
     {
-        this.tsaUrl = tsaUrl;
+        // this.tsaUrl = tsaUrl;
+         this.tsaUrl = null;
     }
 
     /**

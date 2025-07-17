@@ -17,7 +17,8 @@ public class PDShrink {
 
         PDPageContentStream contentStream = new PDPageContentStream(pdf, page, PDPageContentStream.AppendMode.PREPEND, false);
 
-        contentStream.transform(new Matrix(0.9f, 0, 0, 0.9f, 25,75));
+        // contentStream.transform(new Matrix(0.9f, 0, 0, 0.9f, 25,75));
+        contentStream.transform(new Matrix(1f, 0, 0, 1f, 0, 0)); 
         contentStream.close();
 
     }

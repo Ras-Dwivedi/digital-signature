@@ -13,6 +13,7 @@
         </layout>
     </appender>
 
+
     <appender name="RollingFile"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOGS}/spring-boot-logger.log</file>
@@ -32,6 +33,7 @@
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
     </appender>
+   
 
     <appender name="EMAIL" class="ch.qos.logback.classic.net.SMTPAppender">
         <smtpHost>mail.hcg.gr</smtpHost>
