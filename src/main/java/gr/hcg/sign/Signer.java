@@ -83,6 +83,7 @@ public class Signer {
 
         return signing.signPDF(is, os, tsaUrl, "Signature1");
         }
+
         /**
          * Calls Signing.signPdf to sign the pdf and returns the Calendar class
          * @param is
@@ -94,74 +95,80 @@ public class Signer {
          * @throws NoSuchAlgorithmException
          * @throws UnrecoverableKeyException
          */
-//     public Calendar sign(InputStream is, OutputStream os, String password) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
-//         // This function should decide whether the dsc has been inserted or not and in case no, then it should use pfx for signing
+    public Calendar sign(InputStream is, OutputStream os, String password) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
+        // This function should decide whether the dsc has been inserted or not and in case no, then it should use pfx for signing
 //         if (password.isEmpty()){
 //             // In case password is not specified, it has to be pfx signature
 //             logger.info("No password provided, signing with pfx file");
 //             return sign(is, os);
 //         }
-//         boolean dscInsertedStatus = false;
-//         try {
-//             logger.info("Checking if DSC is inserted");
+
+           if(password == null || password.trim().isEmpty()){
+            throw new IllegalArgumentException("DSC password is required for signing.");
+           }
+        boolean dscInsertedStatus = false;
+        try {
+            logger.info("Checking if DSC is inserted");
 // //            logger.info("password is "+ password);
-//             dscInsertedStatus = isDscInserted(password);
-//             logger.debug("dscInsertedStatus is "+ dscInsertedStatus);
-//         } catch (Exception e) {
-//             logger.error("Error in fetching DSC status");
+            dscInsertedStatus = isDscInserted(password);
+            logger.debug("dscInsertedStatus is "+ dscInsertedStatus);
+        } catch (Exception e) {
+            logger.error("Error in fetching DSC status");
 //             e.printStackTrace();
 //             logger.info("DSC is not detected, signing with pfx file");
-//         }
-//         if (!dscInsertedStatus){
-//             logger.info("No DSC detected, signing with pfx file");
+           throw new RuntimeException("Failed to detect DSC. Please ensure the dongle is inserted");
+        }
+        if (!dscInsertedStatus){
+            logger.info("No DSC detected");
 //             return sign(is, os);
-//         }
+            throw new RuntimeException("No DSC detected or incorrect password provided.");
+        }
 //         // Case of dsc based signature, change the code here
-//         logger.debug("DSC is detected, signing with dsc");
+        logger.debug("DSC is detected, signing with dsc");
 //         // Case of dsc based signature, change the code here
 //         // InputStream ksInputStream = new FileInputStream(keystoreName); //:- .p12 file is loaded unnecessarily inside the DSC code path
 
-//         CreateVisibleSignatureMemDsc signing = new CreateVisibleSignatureMemDsc(password.toCharArray());
+        CreateVisibleSignatureMemDsc signing = new CreateVisibleSignatureMemDsc(password.toCharArray());
 
 // //        InputStream imageResource = new FileInputStream(imageName);
 // //        signing.setImageBytes(readBytes(imageResource));
 
-//         return signing.signPDF(is, os, tsaUrl, "Signature1");
+        return signing.signPDF(is, os, tsaUrl, "Signature1");
 
-//     }
+    }
 
 
 //:--- This is Only for DSC Dongle not for pfx file
-public Calendar sign(InputStream is, OutputStream os, String password)
-        throws KeyStoreException, CertificateException, IOException,
-               NoSuchAlgorithmException, UnrecoverableKeyException {
+// public Calendar sign(InputStream is, OutputStream os, String password)
+//         throws KeyStoreException, CertificateException, IOException,
+//                NoSuchAlgorithmException, UnrecoverableKeyException {
 
-    // Step 1: Validate password
-    if (password == null || password.trim().isEmpty()) {
-        throw new IllegalArgumentException("DSC password is required for signing.");
-    }
+//     // Step 1: Validate password
+//     if (password == null || password.trim().isEmpty()) {
+//         throw new IllegalArgumentException("DSC password is required for signing.");
+//     }
 
-    // Step 2: Check if DSC is inserted and password is correct
-    boolean dscInsertedStatus = false;
-    try {
-        logger.info("Checking if DSC is inserted...");
-        dscInsertedStatus = isDscInserted(password);
-        logger.debug("DSC Inserted Status: " + dscInsertedStatus);
-    } catch (Exception e) {
-        logger.error("Error while detecting DSC", e);
-        throw new RuntimeException("Failed to detect DSC. Please ensure the dongle is inserted.");
-    }
+//     // Step 2: Check if DSC is inserted and password is correct
+//     boolean dscInsertedStatus = false;
+//     try {
+//         logger.info("Checking if DSC is inserted...");
+//         dscInsertedStatus = isDscInserted(password);
+//         logger.debug("DSC Inserted Status: " + dscInsertedStatus);
+//     } catch (Exception e) {
+//         logger.error("Error while detecting DSC", e);
+//         throw new RuntimeException("Failed to detect DSC. Please ensure the dongle is inserted.");
+//     }
 
-    if (!dscInsertedStatus) {
-        throw new RuntimeException("No DSC detected or incorrect password provided.");
-    }
+//     if (!dscInsertedStatus) {
+//         throw new RuntimeException("No DSC detected or incorrect password provided.");
+//     }
 
-    // Step 3: Proceed with DSC signing
-    logger.info("DSC detected and password valid. Proceeding to sign...");
-    CreateVisibleSignatureMemDsc signing = new CreateVisibleSignatureMemDsc(password.toCharArray());
+//     // Step 3: Proceed with DSC signing
+//     logger.info("DSC detected and password valid. Proceeding to sign...");
+//     CreateVisibleSignatureMemDsc signing = new CreateVisibleSignatureMemDsc(password.toCharArray());
 
-    return signing.signPDF(is, os, tsaUrl, "Signature1");
-}
+//     return signing.signPDF(is, os, tsaUrl, "Signature1");
+// }
 
     public boolean isDscInserted(String password){
         logger.debug("password is "+ password);

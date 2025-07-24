@@ -175,7 +175,8 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
                System.out.println("Page is Landscape");
                } else {
                // Portrait page
-              humanRect = new Rectangle2D.Float(3 * width / 5 + 65, height / 6 - 110, width / 4, 100);
+            
+            humanRect = new Rectangle2D.Float(3 * width / 5 + 65, height / 6-80, width / 4, 100);
              System.out.println("Page is Portrait");
             }
                 rect = createSignatureRectangle(doc, humanRect);

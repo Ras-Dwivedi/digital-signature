@@ -196,11 +196,11 @@ public class SignController {
 
         //
         
-        if (password.isEmpty() || password.get().trim().isEmpty()) {
-        model.addAttribute("message", "DSC password is required for signing.");
-        model.addAttribute("error", true);
-        return respondHtmlOrJson(json, model, response);
-        }
+        // if (password.isEmpty() || password.get().trim().isEmpty()) {
+        // model.addAttribute("message", "DSC password is required for signing.");
+        // model.addAttribute("error", true);
+        // return respondHtmlOrJson(json, model, response);
+        // }
 
 
 
@@ -209,26 +209,33 @@ public class SignController {
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
              
-            try{
-            Calendar signDate = signer.sign(file.getInputStream(), bos, password.get());
-            } catch(RuntimeException e){
-            //// This handles "No DSC detected or incorrect password provided."
-            model.addAttribute("message", e.getMessage());
-            model.addAttribute("error", true);
-            return respondHtmlOrJson(json, model, response);
-            }
-            
-            // Calendar signDate;
-
-            // if(password.isPresent()){
-
-            //     signDate=signer.sign(file.getInputStream(), bos, password.orElse(""));
-
-            // } else {
-
-            //     signDate=signer.sign(file.getInputStream(), bos);
-
+            // try{
+            // Calendar signDate = signer.sign(file.getInputStream(), bos, password.get());
+            // } catch(RuntimeException e){
+            // //// This handles "No DSC detected or incorrect password provided."
+            // model.addAttribute("message", e.getMessage());
+            // model.addAttribute("error", true);
+            // return respondHtmlOrJson(json, model, response);
             // }
+            
+            Calendar signDate;
+            try{
+            if(password.isPresent()){
+
+                signDate=signer.sign(file.getInputStream(), bos, password.orElse(""));
+
+            } 
+            else {
+
+                // signDate=signer.sign(file.getInputStream(), bos);
+                throw new RuntimeException("DSC dongle not detected or invalid password");
+
+            }
+        } catch(RuntimeException e){
+            model.addAttribute("message", "DSC dongle not detected or invalid password");
+             model.addAttribute("error", true);
+              return respondHtmlOrJson(json, model, response);
+        }
 
 
 
@@ -277,6 +284,7 @@ public class SignController {
 
 
     /**
+     * 
 
      *
 
