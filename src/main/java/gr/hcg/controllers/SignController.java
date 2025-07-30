@@ -228,12 +228,13 @@ public class SignController {
             else {
 
                 // signDate=signer.sign(file.getInputStream(), bos);
-                throw new RuntimeException("DSC dongle not detected or invalid password");
+                throw new RuntimeException("DSC dongle not detected or invalid password !");
 
             }
         } catch(RuntimeException e){
-            model.addAttribute("message", "DSC dongle not detected or invalid password");
-             model.addAttribute("error", true);
+            model.addAttribute("message", "DSC dongle not detected or invalid password!!");
+            model.addAttribute("error", true);
+            model.addAttribute("errorDetails", e.getMessage());
               return respondHtmlOrJson(json, model, response);
         }
 
