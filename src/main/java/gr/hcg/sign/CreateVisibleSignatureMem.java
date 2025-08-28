@@ -119,7 +119,7 @@ public class CreateVisibleSignatureMem extends CreateSignatureBase
      * @param signatureFieldName optional name of an existing (unsigned) signature field
      * @throws IOException
      */
-    public Calendar signPDF(InputStream inputStream, OutputStream signedStream, String tsaUrl, String signatureFieldName) throws IOException
+    public Calendar signPDF(InputStream inputStream, OutputStream signedStream, String tsaUrl, String signatureFieldName, Float x, Float y, Float sigWidth, Float sigHeight, String pdfType) throws IOException
     {
         setTsaUrl(tsaUrl);
 

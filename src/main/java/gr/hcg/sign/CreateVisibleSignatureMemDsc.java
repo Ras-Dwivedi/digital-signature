@@ -31,6 +31,7 @@ import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.util.Hex;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.beans.factory.annotation.Value;
@@ -122,7 +123,7 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
      * @param signatureFieldName optional name of an existing (unsigned) signature field
      * @throws IOException
      */
-    public Calendar signPDF(InputStream inputStream, OutputStream signedStream, String tsaUrl, String signatureFieldName) throws IOException
+    public Calendar signPDF(InputStream inputStream, OutputStream signedStream, String tsaUrl, String signatureFieldName, Float x, Float y, Float sigWidth, Float sigHeight, String pdfType) throws IOException
     {
         setTsaUrl(tsaUrl);
 
@@ -159,30 +160,108 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
                 signature = new PDSignature();
             }
 
-            if (rect == null)
-            {
-                int lastPageIndex = doc.getNumberOfPages() - 1;
-                System.out.println("no of pages are "+ doc.getNumberOfPages());
-                float width = doc.getPage(lastPageIndex).getMediaBox().getWidth();
-                float height = doc.getPage(lastPageIndex).getMediaBox().getHeight();
-                // Rectangle2D humanRect = new Rectangle2D.Float(3*width/4.2f, height/6-30, width/4, 100); // landscape page 
-                //Rectangle2D humanRect = new Rectangle2D.Float(3*width/5+65, height/6-110, width/4, 100); //portrait page
-                 Rectangle2D humanRect;
+            // if (rect == null)
+            // {
+            //     int lastPageIndex = doc.getNumberOfPages() - 1;
+            //     System.out.println("no of pages are "+ doc.getNumberOfPages());
+            //     float width = doc.getPage(lastPageIndex).getMediaBox().getWidth();
+            //     float height = doc.getPage(lastPageIndex).getMediaBox().getHeight();
+            //     // Rectangle2D humanRect = new Rectangle2D.Float(3*width/4.2f, height/6-30, width/4, 100); // landscape page 
+            //     //Rectangle2D humanRect = new Rectangle2D.Float(3*width/5+65, height/6-110, width/4, 100); //portrait page
+            //      Rectangle2D humanRect;
 
-               if (width > height) {
-               // Landscape page
-               humanRect = new Rectangle2D.Float(3 * width / 4.2f, height / 6 - 30, width / 4, 100);
-               System.out.println("Page is Landscape");
-               } else {
-               // Portrait page
+                 
+            //    if (width > height) {
+            //    // Landscape page
+            //    humanRect = new Rectangle2D.Float(3 * width / 4.2f, height / 6 - 30, width / 4, 100);
+            //    System.out.println("Page is Landscape" + 3 * width / 4.2f) ;
+            //    } else {
+            //    // Portrait page
             
-            humanRect = new Rectangle2D.Float(3 * width / 5 + 65, height / 6-80, width / 4, 100);
-             System.out.println("Page is Portrait");
-            }
-                rect = createSignatureRectangle(doc, humanRect);
-            }
+            //   humanRect = new Rectangle2D.Float(3 * width / 5 + 5, height / 6-35, width / 4, 100);
+            //   System.out.println("Page is Portrait" + 3 * width / 5 + 65);
+            //   }
+              
+            
+            // }
+
+            if (rect == null) {
+            int lastPageIndex = doc.getNumberOfPages() - 1;
+            System.out.println("No of pages: " + doc.getNumberOfPages());
+            float width = doc.getPage(lastPageIndex).getMediaBox().getWidth();
+            float height = doc.getPage(lastPageIndex).getMediaBox().getHeight();
+            Rectangle2D humanRect; 
+
+             //Extract text from the PDF to detect type
+            // PDFTextStripper stripper = new PDFTextStripper();
+            // String text = stripper.getText(doc);
+
+            // Float x = 362.552f;
+            // Float y = 105.31999f;
+
+        //     if (x > 0 && y > 0 && sigWidth > 0 && sigHeight > 0) {
+        //     // Certificate PDF (Participation Certificate)
+        //     // humanRect = new Rectangle2D.Float(
+        //     // 3 * width / 5 + 5,
+        //     // height / 6 - 35,
+        //     // width / 4,
+        //     // 100
+        //     // );
+        //     humanRect = new Rectangle2D.Float(
+        //     x,
+        //     y,
+        //     sigWidth,
+        //     sigHeight
+        //     );
+        //     System.out.println("PDF Type: Certificate" + (3 * width / 5 + 5) +" -> " + (height / 6 - 35));
+
+        //     } else {
+        //     if (width > height) {
+        //    //  Landscape page
+        //    humanRect = new Rectangle2D.Float(
+        //     3 * width / 4.2f,
+        //     height / 6 - 30,
+        //     width / 4,
+        //     100
+        //     );
+        //     System.out.println("Page is Landscape");
+
+        //     } else {
+        //    //  Portrait page
+        //     humanRect = new Rectangle2D.Float(
+        //     3 * width / 5 + 65,
+        //     height / 6 - 80,
+        //     width / 4,
+        //     100
+        //     );
+        //    System.out.println("Page is Portrait");
+        //    }
+        // }
+         
+        // if(pdfType == null && pdfType.trim().isEmpty()){
+        //     throw new IllegalArgumentException("PDF TYpe cannot be null or empty");
+
+        // }
+
+        switch (pdfType) {
+        case "certificate": 
+        humanRect = new Rectangle2D.Float(x, y, sigWidth, sigHeight);
+        break;
+        case "Annexure": 
+        humanRect = new Rectangle2D.Float(3 * width / 5 + 65, height / 6 - 80, width / 4, 100);
+        break;
+        case "Landscape": 
+        humanRect = new Rectangle2D.Float(3 * width / 4.2f, height / 6 - 30, width / 4, 100 );
+        break;
+        default:
+        throw new IllegalArgumentException("Unknown PDF Type:" +pdfType);
+
+        }
+           rect = createSignatureRectangle(doc, humanRect);
+           }
 
             // Optional: certify
+
             // can be done only if version is at least 1.5 and if not already set
             // doing this on a PDF/A-1b file fails validation by Adobe preflight (PDFBOX-3821)
             // PDF/A-1b requires PDF version 1.4 max, so don't increase the version on such files.

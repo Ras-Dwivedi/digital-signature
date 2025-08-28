@@ -90,7 +90,7 @@ public abstract class CreateSignatureBaseDsc implements SignatureInterface
                 if (cert instanceof X509Certificate)
                 {
                     // avoid expired certificate
-//                    ((X509Certificate) cert).checkValidity();
+                //    ((X509Certificate) cert).checkValidity();
 
                     SigUtils.checkCertificateUsage((X509Certificate) cert);
                 }
