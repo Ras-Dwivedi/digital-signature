@@ -198,12 +198,15 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
         switch (pdfType) {
         case "certificate": 
         humanRect = new Rectangle2D.Float(3 * width / 5 + 5, height / 6 - 35, width/4, 100);
+        System.out.println((3 * width / 5 + 5) +" "+ (height / 6 - 35) +" "+ width/4);
         break;
-        case "Annexure":
+        case "annexture":
         humanRect = new Rectangle2D.Float(3 * width / 5 + 65, height / 6 - 80, width / 4, 100);
+        System.out.println((3 * width / 5 + 65) + " " + (height / 6 - 80) + " "+ width/4);
         break;
-        case "Landscape": 
+        case "landscape": 
         humanRect = new Rectangle2D.Float(3 * width / 4.2f, height / 6 - 30, width / 4, 100 );
+        System.out.println((3 * width / 4.2f) +" " +(height / 6 - 30) +" "+width/4);
         break;
         default:
         throw new IllegalArgumentException("Unknown PDF Type:" +pdfType);
