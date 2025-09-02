@@ -123,7 +123,7 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
      * @param signatureFieldName optional name of an existing (unsigned) signature field
      * @throws IOException
      */
-    public Calendar signPDF(InputStream inputStream, OutputStream signedStream, String tsaUrl, String signatureFieldName, Float x, Float y, Float sigWidth, Float sigHeight, String pdfType) throws IOException
+    public Calendar signPDF(InputStream inputStream, OutputStream signedStream, String tsaUrl, String signatureFieldName, Float x, Float y, Float sigWidth, Float sigHeight) throws IOException
     {
         setTsaUrl(tsaUrl);
 
@@ -185,12 +185,12 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
             
             // }
 
-            if (rect == null) {
-            int lastPageIndex = doc.getNumberOfPages() - 1;
-            System.out.println("No of pages: " + doc.getNumberOfPages());
-            float width = doc.getPage(lastPageIndex).getMediaBox().getWidth();
-            float height = doc.getPage(lastPageIndex).getMediaBox().getHeight();
-            Rectangle2D humanRect; 
+            // if (rect == null) {
+            // int lastPageIndex = doc.getNumberOfPages() - 1;
+            // System.out.println("No of pages: " + doc.getNumberOfPages());
+            // float width = doc.getPage(lastPageIndex).getMediaBox().getWidth();
+            // float height = doc.getPage(lastPageIndex).getMediaBox().getHeight();
+            // Rectangle2D humanRect; 
 
              //Extract text from the PDF to detect type
             // PDFTextStripper stripper = new PDFTextStripper();
@@ -243,25 +243,39 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
 
         // }
 
-        switch (pdfType) {
-        case "certificate": 
-        humanRect = new Rectangle2D.Float(x, y, sigWidth, sigHeight);
-        System.out.println(x+ " "+y+" "+sigWidth+" "+sigHeight);
-        break;
-        case "annexure": 
-        humanRect = new Rectangle2D.Float(3 * width / 5 + 65, height / 6 - 80, width / 4, 100);
-        System.out.println((3 * width / 5 + 65) +" " +(height / 6 - 80)+ " " +width / 4);
-        break;
-        case "landscape": 
-        humanRect = new Rectangle2D.Float(3 * width / 4.2f, height / 6 - 30, width / 4, 100 );
-        System.out.println((3 * width / 4.2f)+ " "+ (height / 6 - 30)+ " " + width / 4);
-        break;
-        default:
-        throw new IllegalArgumentException("Unknown PDF Type:" +pdfType);
+        // switch (pdfType) {
+        // case "certificate": 
+        // humanRect = new Rectangle2D.Float(x, y, sigWidth, sigHeight);
+        // System.out.println(x+ " "+y+" "+sigWidth+" "+sigHeight);
+        // break;
+        // case "annexure": 
+        // humanRect = new Rectangle2D.Float(3 * width / 5 + 65, height / 6 - 80, width / 4, 100);
+        // System.out.println((3 * width / 5 + 65) +" " +(height / 6 - 80)+ " " +width / 4);
+        // break;
+        // case "landscape": 
+        // humanRect = new Rectangle2D.Float(3 * width / 4.2f, height / 6 - 30, width / 4, 100 );
+        // System.out.println((3 * width / 4.2f)+ " "+ (height / 6 - 30)+ " " + width / 4);
+        // break;
+        // default:
+        // throw new IllegalArgumentException("Unknown PDF Type:" +pdfType);
 
-        }
-           rect = createSignatureRectangle(doc, humanRect);
-           }
+        // }
+        //    rect = createSignatureRectangle(doc, humanRect);
+        //    }
+        
+         if (rect == null)
+            {
+                // int lastPageIndex = doc.getNumberOfPages() - 1;
+                // System.out.println("no of pages are "+ doc.getNumberOfPages());
+                // float width1 = doc.getPage(pageIndex).getMediaBox().getWidth();
+                // float height1 = doc.getPage(pageIndex).getMediaBox().getHeight();
+                // Rectangle2D humanRect = new Rectangle2D.Float(3*width1/5, height1/6, width1/4, 100);
+                Rectangle2D humanRect = new Rectangle2D.Float(x, y, sigWidth, sigHeight);
+                rect = createSignatureRectangle(doc, humanRect);
+                 
+                
+            }
+         
 
             // Optional: certify
 

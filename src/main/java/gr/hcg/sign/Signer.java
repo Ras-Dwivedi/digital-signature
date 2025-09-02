@@ -68,7 +68,7 @@ public class Signer {
        
     }
 
-    public Calendar sign(InputStream is, OutputStream os, float x, float y, float sigWidth, float sigHeight, String pdfType) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
+    public Calendar sign(InputStream is, OutputStream os, float x, float y, float sigWidth, float sigHeight) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
         logger.info("Default signing with pfx file");
         InputStream ksInputStream = new FileInputStream(keystoreName);
 
@@ -81,7 +81,7 @@ public class Signer {
 //        InputStream imageResource = new FileInputStream(imageName);
 //        signing.setImageBytes(readBytes(imageResource));
 
-        return signing.signPDF(is, os, tsaUrl, "Signature1", x, y, sigWidth, sigHeight, pdfType);
+        return signing.signPDF(is, os, tsaUrl, "Signature1", x, y, sigWidth, sigHeight);
         }
 
         /**
@@ -95,7 +95,7 @@ public class Signer {
          * @throws NoSuchAlgorithmException
          * @throws UnrecoverableKeyException
          */
-    public Calendar sign(InputStream is, OutputStream os, String password, Float x, Float y, Float sigWidth, Float sigHeight, String pdfType) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
+    public Calendar sign(InputStream is, OutputStream os, String password, Float x, Float y, Float sigWidth, Float sigHeight) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
         // This function should decide whether the dsc has been inserted or not and in case no, then it should use pfx for signing
 //         if (password.isEmpty()){
 //             // In case password is not specified, it has to be pfx signature
@@ -132,7 +132,7 @@ public class Signer {
 
 // //        InputStream imageResource = new FileInputStream(imageName);
 // //        signing.setImageBytes(readBytes(imageResource));
-        return signing.signPDF(is, os, tsaUrl, "Signature1", x, y, sigWidth, sigHeight, pdfType);
+        return signing.signPDF(is, os, tsaUrl, "Signature1", x, y, sigWidth, sigHeight);
 
     }
 

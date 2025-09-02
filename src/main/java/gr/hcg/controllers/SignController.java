@@ -168,8 +168,6 @@ public class SignController {
 
                                                     @RequestParam(value = "sigHeight", required = false)  float sigHeight,
 
-                                                    @RequestParam(value = "pdfType", required = false) String pdfType,
-
 
                                                     HttpServletResponse response ) {
 
@@ -233,7 +231,7 @@ public class SignController {
             try{
             if(password.isPresent()){
 
-                signDate=signer.sign(file.getInputStream(), bos, password.orElse(""), x, y, sigWidth, sigHeight, pdfType);
+                signDate=signer.sign(file.getInputStream(), bos, password.orElse(""), x, y, sigWidth, sigHeight);
 
             } 
             else {
@@ -452,8 +450,6 @@ public class SignController {
 
                                                 @RequestParam(value = "sigHeight", required = false) float sigHeight,
 
-                                                @RequestParam(value = "pdfType", required = false) String pdfType,
-
 
                                                 HttpServletResponse response) {
 
@@ -510,11 +506,11 @@ public class SignController {
 
             if(password.isPresent()){
 
-                signDate=signer.sign(inputStream, bos, password.orElse(""), x, y, sigWidth, sigHeight, pdfType);
+                signDate=signer.sign(inputStream, bos, password.orElse(""), x, y, sigWidth, sigHeight);
 
             } else {
 
-                signDate=signer.sign(inputStream, bos, x, y, sigWidth, sigHeight, pdfType);
+                signDate=signer.sign(inputStream, bos, x, y, sigWidth, sigHeight);
 
             }
 
@@ -694,12 +690,12 @@ public class SignController {
                 System.out.println("password: " + password);
                 System.out.println("password: is not empty");
 
-                signDate=signer.sign(inputStream, bos, password, request.getX(), request.getY(), request.getWidth(),request.getHeight(), request.getpdfType());
+                signDate=signer.sign(inputStream, bos, password, request.getX(), request.getY(), request.getWidth(),request.getHeight());
 
             } else {
                 System.out.println("password: " + password);
                 System.out.println("password: is  empty");
-                signDate=signer.sign(inputStream, bos, request.getX(),request.getY(), request.getWidth(), request.getHeight(), request.getpdfType());
+                signDate=signer.sign(inputStream, bos, request.getX(),request.getY(), request.getWidth(), request.getHeight());
 
             }
 
@@ -869,9 +865,6 @@ class SignPdfRequest {
     @JsonProperty("sigHeight")
     private float sigHeight;
 
-    @JsonProperty("pdfType")
-    private String pdfType;
-
 
 
 
@@ -909,9 +902,6 @@ class SignPdfRequest {
 
     public float getHeight() { return sigHeight; }
     public void setHeight(float sigHeight) { this.sigHeight = sigHeight; }
-
-    public String getpdfType() { return pdfType; }
-    public void setpdfType(String pdfType) { this.pdfType = pdfType; }
 
     
 

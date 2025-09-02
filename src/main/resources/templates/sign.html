@@ -92,20 +92,11 @@
             <input id="password" type="text" name="password" />
         </div>
 
-        <input type="hidden" name="x" value="362.552" />
-        <input type="hidden" name="y" value="105.31999" />
-        <input type="hidden" name="sigWidth" value="148" />
-        <input type="hidden" name="sigHeight" value="100" /> 
+        <input type="hidden" id="x" name="x"  />
+        <input type="hidden" id="y" name="y"  />
+        <input type="hidden" id="sigWidth" name="sigWidth"  />
+        <input type="hidden" id= "sigHeight" name="sigHeight" /> 
 
-        <div class="form-group">
-        <label for="pdfType">Select PDF Type</label>
-    <select id="pdfType" name="pdfType" required>
-        <option value="">-- Select Document Type --</option>
-        <option value="certificate">DST-Certificate</option>
-        <option value="annexure"> DST-Annexure</option>
-        <option value="landscape">DST-Landscape</option>
-    </select>
-    </div>
 
         <div class="form-group">
             <input type="submit" value="Sign Document" />
@@ -117,5 +108,15 @@
     Made with <span class="coffee-icon">☕</span> by C3iHub
 </div>
 
+<script>
+    // Example: Set values dynamically (replace with PDF.js rectangle logic)
+    function setSignatureBox(x, y, width, height) {
+        document.getElementById("x").value = x;
+        document.getElementById("y").value = y;
+        document.getElementById("sigWidth").value = width;
+        document.getElementById("sigHeight").value = height;
+    }
+    setSignatureBox(362.552, 105.31999, 148.98, 100);
+</script>
 </body>
 </html>
