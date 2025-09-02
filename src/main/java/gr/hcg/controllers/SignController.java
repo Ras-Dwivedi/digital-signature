@@ -160,14 +160,6 @@ public class SignController {
 
                                                     @RequestParam(value = "password") Optional<String> password,
                                                     
-                                                    @RequestParam(value = "x", required = false)  float x,
-
-                                                    @RequestParam(value = "y", required = false)  float y,
-
-                                                    @RequestParam(value = "sigWidth", required = false)  float sigWidth,
-
-                                                    @RequestParam(value = "sigHeight", required = false)  float sigHeight,
-
                                                     @RequestParam(value = "pdfType", required = false) String pdfType,
 
 
@@ -233,7 +225,7 @@ public class SignController {
             try{
             if(password.isPresent()){
 
-                signDate=signer.sign(file.getInputStream(), bos, password.orElse(""), x, y, sigWidth, sigHeight, pdfType);
+                signDate=signer.sign(file.getInputStream(), bos, password.orElse(""), pdfType);
 
             } 
             else {
@@ -444,14 +436,6 @@ public class SignController {
 
                                                 @RequestParam(value = "password") Optional<String> password,
 
-                                                 @RequestParam(value = "x", required = false) float x,
-    
-                                                @RequestParam(value ="y", required = false) float y,
-
-                                                @RequestParam(value = "sigWidth", required = false) float sigWidth,
-
-                                                @RequestParam(value = "sigHeight", required = false) float sigHeight,
-
                                                 @RequestParam(value = "pdfType", required = false) String pdfType,
 
 
@@ -510,11 +494,11 @@ public class SignController {
 
             if(password.isPresent()){
 
-                signDate=signer.sign(inputStream, bos, password.orElse(""), x, y, sigWidth, sigHeight, pdfType);
+                signDate=signer.sign(inputStream, bos, password.orElse(""), pdfType);
 
             } else {
 
-                signDate=signer.sign(inputStream, bos, x, y, sigWidth, sigHeight, pdfType);
+                signDate=signer.sign(inputStream, bos, pdfType);
 
             }
 
@@ -694,12 +678,12 @@ public class SignController {
                 System.out.println("password: " + password);
                 System.out.println("password: is not empty");
 
-                signDate=signer.sign(inputStream, bos, password, request.getX(), request.getY(), request.getWidth(),request.getHeight(), request.getpdfType());
+                signDate=signer.sign(inputStream, bos, password, request.getpdfType());
 
             } else {
                 System.out.println("password: " + password);
                 System.out.println("password: is  empty");
-                signDate=signer.sign(inputStream, bos, request.getX(),request.getY(), request.getWidth(), request.getHeight(), request.getpdfType());
+                signDate=signer.sign(inputStream, bos, request.getpdfType());
 
             }
 
@@ -857,18 +841,6 @@ class SignPdfRequest {
 
     private String password;
 
-    @JsonProperty("x")
-    private float x;
-
-    @JsonProperty("y")
-    private float y;
-
-    @JsonProperty("sigWidth")
-    private float sigWidth;
-
-    @JsonProperty("sigHeight")
-    private float sigHeight;
-
     @JsonProperty("pdfType")
     private String pdfType;
 
@@ -897,18 +869,6 @@ class SignPdfRequest {
         return password;
 
     }
-
-    public float getX() { return x; }
-    public void setX(float x) { this.x = x; }
-
-    public float getY() { return y; }
-    public void setY(float y) { this.y = y; }
-
-   public float getWidth() { return sigWidth; }
-    public void setWidth(float sigWidth) { this.sigWidth = sigWidth; }
-
-    public float getHeight() { return sigHeight; }
-    public void setHeight(float sigHeight) { this.sigHeight = sigHeight; }
 
     public String getpdfType() { return pdfType; }
     public void setpdfType(String pdfType) { this.pdfType = pdfType; }
