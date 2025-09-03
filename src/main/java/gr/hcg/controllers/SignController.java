@@ -160,13 +160,13 @@ public class SignController {
 
                                                     @RequestParam(value = "password") Optional<String> password,
                                                     
-                                                    @RequestParam(value = "x", required = false)  float x,
+                                                    @RequestParam(value = "x", required = true)  float x,
 
-                                                    @RequestParam(value = "y", required = false)  float y,
+                                                    @RequestParam(value = "y", required = true)  float y,
 
-                                                    @RequestParam(value = "sigWidth", required = false)  float sigWidth,
+                                                    @RequestParam(value = "sigWidth", required = true)  float sigWidth,
 
-                                                    @RequestParam(value = "sigHeight", required = false)  float sigHeight,
+                                                    @RequestParam(value = "sigHeight", required = true)  float sigHeight,
 
 
                                                     HttpServletResponse response ) {
@@ -442,13 +442,13 @@ public class SignController {
 
                                                 @RequestParam(value = "password") Optional<String> password,
 
-                                                 @RequestParam(value = "x", required = false) float x,
+                                                @RequestParam(value = "x", required = true) float x,
     
-                                                @RequestParam(value ="y", required = false) float y,
+                                                @RequestParam(value ="y", required = true) float y,
 
-                                                @RequestParam(value = "sigWidth", required = false) float sigWidth,
+                                                @RequestParam(value = "sigWidth", required = true) float sigWidth,
 
-                                                @RequestParam(value = "sigHeight", required = false) float sigHeight,
+                                                @RequestParam(value = "sigHeight", required = true) float sigHeight,
 
 
                                                 HttpServletResponse response) {
@@ -706,6 +706,7 @@ public class SignController {
             // Convert signed PDF bytes to Base64
 
             byte[] signedPdfBytes = bos.toByteArray();
+
 
             String signedPdfBase64 = Base64.getEncoder().encodeToString(signedPdfBytes);
 
