@@ -160,13 +160,13 @@ public class SignController {
 
                                                     @RequestParam(value = "password") Optional<String> password,
                                                     
-                                                    @RequestParam(value = "x", required = true)  float x,
+                                                    @RequestParam(value = "x", required = true)  Float x,
 
-                                                    @RequestParam(value = "y", required = true)  float y,
+                                                    @RequestParam(value = "y", required = true)  Float y,
 
-                                                    @RequestParam(value = "sigWidth", required = true)  float sigWidth,
+                                                    @RequestParam(value = "sigWidth", required = true)  Float sigWidth,
 
-                                                    @RequestParam(value = "sigHeight", required = true)  float sigHeight,
+                                                    @RequestParam(value = "sigHeight", required = true)  Float sigHeight,
 
 
                                                     HttpServletResponse response ) {
@@ -245,7 +245,7 @@ public class SignController {
 
             }
         } catch(RuntimeException e){
-            model.addAttribute("message", "DSC dongle not detected or invalid password!!");
+            // model.addAttribute("message", "DSC dongle not detected or invalid password!!");
             model.addAttribute("error", true);
             model.addAttribute("errorDetails", e.getMessage());
               return respondHtmlOrJson(json, model, response);
@@ -442,13 +442,13 @@ public class SignController {
 
                                                 @RequestParam(value = "password") Optional<String> password,
 
-                                                @RequestParam(value = "x", required = true) float x,
+                                                @RequestParam(value = "x", required = true) Float x,
     
-                                                @RequestParam(value ="y", required = true) float y,
+                                                @RequestParam(value ="y", required = true) Float y,
 
-                                                @RequestParam(value = "sigWidth", required = true) float sigWidth,
+                                                @RequestParam(value = "sigWidth", required = true) Float sigWidth,
 
-                                                @RequestParam(value = "sigHeight", required = true) float sigHeight,
+                                                @RequestParam(value = "sigHeight", required = true) Float sigHeight,
 
 
                                                 HttpServletResponse response) {
@@ -667,6 +667,44 @@ public class SignController {
             return new ResponseEntity<>(responseMap, HttpStatus.UNAUTHORIZED);
         }
 
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+        responseMap.put("error", "true");
+        responseMap.put("message", "Password is required for signing");
+        return new ResponseEntity<>(responseMap, HttpStatus.BAD_REQUEST);
+        }
+
+    //     if (request.getX() == null || request.getY() == null ||
+    //     request.getWidth() == null || request.getHeight() == null) {
+    //     responseMap.put("error", "true");
+    //     responseMap.put("message", "x, y, sigWidth, sigHeight are required");
+    //     return new ResponseEntity<>(responseMap, HttpStatus.BAD_REQUEST);
+    //    }
+
+
+    if (request.getX() == null) {
+    responseMap.put("error", "true");
+    responseMap.put("message", "x is required");
+    return new ResponseEntity<>(responseMap, HttpStatus.BAD_REQUEST);
+}
+
+if (request.getY() == null) {
+    responseMap.put("error", "true");
+    responseMap.put("message", "y is required");
+    return new ResponseEntity<>(responseMap, HttpStatus.BAD_REQUEST);
+}
+
+if (request.getWidth() == null) {
+    responseMap.put("error", "true");
+    responseMap.put("message", "sigWidth is required");
+    return new ResponseEntity<>(responseMap, HttpStatus.BAD_REQUEST);
+}
+
+if (request.getHeight() == null) {
+    responseMap.put("error", "true");
+    responseMap.put("message", "sigHeight is required");
+    return new ResponseEntity<>(responseMap, HttpStatus.BAD_REQUEST);
+}
+
 
 
         try {
@@ -692,12 +730,13 @@ public class SignController {
 
                 signDate=signer.sign(inputStream, bos, password, request.getX(), request.getY(), request.getWidth(),request.getHeight());
 
-            } else {
-                System.out.println("password: " + password);
-                System.out.println("password: is  empty");
-                signDate=signer.sign(inputStream, bos, request.getX(),request.getY(), request.getWidth(), request.getHeight());
-
             }
+            //  else {
+            //     System.out.println("password: " + password);
+            //     System.out.println("password: is  empty");
+            //     signDate=signer.sign(inputStream, bos, request.getX(),request.getY(), request.getWidth(), request.getHeight());
+
+            // }
 
 
 
@@ -739,6 +778,7 @@ public class SignController {
         }
 
     }
+
 
     /**
 
@@ -855,16 +895,16 @@ class SignPdfRequest {
     private String password;
 
     @JsonProperty("x")
-    private float x;
+    private Float x;
 
     @JsonProperty("y")
-    private float y;
+    private Float y;
 
     @JsonProperty("sigWidth")
-    private float sigWidth;
+    private Float sigWidth;
 
     @JsonProperty("sigHeight")
-    private float sigHeight;
+    private Float sigHeight;
 
 
 
@@ -892,19 +932,20 @@ class SignPdfRequest {
 
     }
 
-    public float getX() { return x; }
-    public void setX(float x) { this.x = x; }
+    public Float getX() { return x; }
+    public void setX(Float x) { this.x = x; }
 
-    public float getY() { return y; }
-    public void setY(float y) { this.y = y; }
+    public Float getY() { return y; }
+    public void setY(Float y) { this.y = y; }
 
-   public float getWidth() { return sigWidth; }
-    public void setWidth(float sigWidth) { this.sigWidth = sigWidth; }
+   public Float getWidth() { return sigWidth; }
+    public void setWidth(Float sigWidth) { this.sigWidth = sigWidth; }
 
-    public float getHeight() { return sigHeight; }
-    public void setHeight(float sigHeight) { this.sigHeight = sigHeight; }
+    public Float getHeight() { return sigHeight; }
+    public void setHeight(Float sigHeight) { this.sigHeight = sigHeight; }
 
     
 
 
 }
+

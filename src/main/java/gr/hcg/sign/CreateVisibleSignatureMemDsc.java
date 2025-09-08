@@ -262,6 +262,11 @@ public class CreateVisibleSignatureMemDsc extends CreateSignatureBaseDsc
         // }
         //    rect = createSignatureRectangle(doc, humanRect);
         //    }
+
+          if (x == null || y == null || sigWidth == null || sigHeight == null) {
+          throw new IllegalArgumentException("Signature position and size must be provided.");
+          }
+
         
          if (rect == null)
             {
