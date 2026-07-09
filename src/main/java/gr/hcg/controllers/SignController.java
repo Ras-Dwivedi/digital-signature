@@ -74,9 +74,9 @@ public class SignController {
 
 
 
-    @Value("${signer.apikey}")
+    // @Value("${signer.apikey}")
 
-    private String signerapikey;
+    // private String signerapikey;
 
 
 
@@ -156,7 +156,7 @@ public class SignController {
 
                                                     @RequestParam(value = "file") MultipartFile file,
 
-                                                    @RequestParam(value = "apikey") String apikey,
+                                                    // @RequestParam(value = "apikey") String apikey,
 
                                                     @RequestParam(value = "password") Optional<String> password,
                                                     
@@ -191,17 +191,17 @@ public class SignController {
 
 
 
-        if(!apikey.equals(signerapikey)) {
+        // if(!apikey.equals(signerapikey)) {
 
-            model.addAttribute("message", "Wrong api key");
+        //     model.addAttribute("message", "Wrong api key");
 
 
 
-            model.addAttribute("error", true);
+        //     model.addAttribute("error", true);
 
-            return respondHtmlOrJson(json, model, response);
+        //     return respondHtmlOrJson(json, model, response);
 
-        }
+        // }
 
         //
         
@@ -438,7 +438,7 @@ public class SignController {
 
                                                 @RequestParam(value = "base64File") String base64File,
 
-                                                @RequestParam(value = "apikey") String apikey,
+                                                // @RequestParam(value = "apikey") String apikey,
 
                                                 @RequestParam(value = "password") Optional<String> password,
 
@@ -475,15 +475,15 @@ public class SignController {
 
 
 
-        if (!apikey.equals(signerapikey)) {
+        // if (!apikey.equals(signerapikey)) {
 
-            model.addAttribute("message", "Wrong API key");
+        //     model.addAttribute("message", "Wrong API key");
 
-            model.addAttribute("error", true);
+        //     model.addAttribute("error", true);
 
-            return respondHtmlOrJson(json, model, response);
+        //     return respondHtmlOrJson(json, model, response);
 
-        }
+        // }
 
 
 
@@ -661,11 +661,11 @@ public class SignController {
 
 
 
-        if (!request.getApikey().equals(signerapikey)) {
-            responseMap.put("error", "true");
-            responseMap.put("message", "Wrong API key");
-            return new ResponseEntity<>(responseMap, HttpStatus.UNAUTHORIZED);
-        }
+        // if (!request.getApikey().equals(signerapikey)) {
+        //     responseMap.put("error", "true");
+        //     responseMap.put("message", "Wrong API key");
+        //     return new ResponseEntity<>(responseMap, HttpStatus.UNAUTHORIZED);
+        // }
 
         if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
         responseMap.put("error", "true");
@@ -884,9 +884,9 @@ class SignPdfRequest {
 
 
 
-    @JsonProperty("apikey")
+    // @JsonProperty("apikey")
 
-    private String apikey;
+    // private String apikey;
 
 
 
@@ -918,11 +918,11 @@ class SignPdfRequest {
 
 
 
-    public String getApikey() {
+    // public String getApikey() {
 
-        return apikey;
+    //     return apikey;
 
-    }
+    // }
 
 
 
